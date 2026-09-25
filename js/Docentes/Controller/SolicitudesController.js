@@ -40,7 +40,7 @@ function mostrarSolicitudes(listaSolicitudes) {
         <td>${solicitud.estudiante}</td>
         <td>${solicitud.codigo}</td>
         <td>${solicitud.correo}</td>
-        <td><a href="revisionSolicitud.html?id=${solicitud.id}" class="btn btn-warning">Revisar</a></td>
+        <td><a href="revisionSolicitud-docente.html?id=${solicitud.id}" class="btn btn-warning">Revisar</a></td>
       </tr>
     `;
   });

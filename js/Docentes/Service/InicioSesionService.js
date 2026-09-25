@@ -36,7 +36,7 @@ export async function iniciarSesion(correo, contrasena) {
 
   return {
     exito: true,
-    redireccion: "index.html",
+    redireccion: "inicio-docente.html",
     sesion: {
       idDocente: resultado.datos.idUsuario,
       correo: resultado.datos.email,

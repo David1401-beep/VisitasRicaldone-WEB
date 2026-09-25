@@ -36,7 +36,7 @@ export async function iniciarSesionAdministrador(correo, contrasena) {
 
   return {
     exito: true,
-    redireccion: rol === "ADMINISTRADOR" ? "index.html" : "../Recepcionista/index.html",
+    redireccion: rol === "ADMINISTRADOR" ? "inicio-admin.html" : "inicio-recepcionista.html",
     sesion: {
       idUsuario: resultado.datos.idUsuario,
       correo: resultado.datos.email,

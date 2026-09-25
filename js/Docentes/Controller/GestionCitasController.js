@@ -8,7 +8,9 @@ import {
   buscarCitas,
   validarDatosCita,
   formatearFechaEspanol,
-  formatearHoraAMPM
+  formatearHoraAMPM,
+  aceptarPropuesta,
+  proponerOtraFecha
 } from "../Service/GestionCitasService.js";
 import { obtenerIdDocenteActivo } from "../Service/ApiService.js";
 
@@ -354,6 +356,138 @@ async function abrirEdicion(idCita) {
 }
 
 
+// Revisar la propuesta del encargado
+
+// Solo para ver. El docente no puede cambiar lo que mandó el encargado.
+async function abrirRevisionPropuesta(idCita) {
+  const fila = cuerpoTablaCitas.querySelector(`tr[data-id="${idCita}"]`);
+
+  if (!fila || !window.Swal) {
+    return;
+  }
+
+  const datos = fila.dataset;
+  const fecha = formatearFechaEspanol(datos.fechaCruda);
+  const hora = formatearHoraAMPM(datos.horaCruda);
+
+  const resultado = await Swal.fire({
+    title: "Propuesta del encargado",
+    width: 520,
+    html: `
+      <div class="text-start">
+        <p class="mb-2"><strong>Estudiante:</strong> ${escaparHtml(datos.estudiante)}</p>
+        <p class="mb-2"><strong>Nueva fecha:</strong> ${escaparHtml(fecha)}</p>
+        <p class="mb-2"><strong>Nueva hora:</strong> ${escaparHtml(hora)}</p>
+        <p class="mb-2"><strong>Estado:</strong> Pospuesta</p>
+
+        <label class="form-label mt-2"><strong>Motivo del encargado</strong></label>
+        <textarea class="form-control" rows="3" readonly
+                  style="background-color:#f1f1f1;">${escaparHtml(datos.motivoPropuesta || "No indicó un motivo.")}</textarea>
+
+        <p class="text-secondary small mt-3 mb-0">
+          Si no puede en esa fecha, proponga otra y el encargado la revisará.
+        </p>
+      </div>
+    `,
+    showCancelButton: true,
+    showDenyButton: true,
+    confirmButtonText: "Aceptar propuesta",
+    denyButtonText: "Proponer otra fecha",
+    cancelButtonText: "Cerrar",
+    confirmButtonColor: "#198754",
+    denyButtonColor: "#f0ad4e",
+    reverseButtons: true
+  });
+
+  if (resultado.isConfirmed) {
+    try {
+      await aceptarPropuesta(idCita);
+      await actualizarHistorial(false);
+      avisoExito("Aceptó la fecha propuesta por el encargado.");
+    } catch (error) {
+      avisoError(error.message);
+    }
+    return;
+  }
+
+  if (resultado.isDenied) {
+    abrirContrapropuesta(idCita, datos.estudiante);
+  }
+}
+
+// El docente manda su fecha y ahora le toca contestar al encargado.
+async function abrirContrapropuesta(idCita, estudiante) {
+  const resultado = await Swal.fire({
+    title: "Proponer otra fecha",
+    width: 520,
+    html: `
+      <div class="text-start">
+        <p class="mb-3"><strong>Estudiante:</strong> ${escaparHtml(estudiante)}</p>
+
+        <div class="row">
+          <div class="col-6">
+            <label class="form-label">Fecha</label>
+            <input type="date" id="swalNuevaFecha" class="form-control" min="${fechaDeHoy()}">
+          </div>
+          <div class="col-6">
+            <label class="form-label">Hora</label>
+            <input type="time" id="swalNuevaHora" class="form-control">
+          </div>
+        </div>
+
+        <label class="form-label mt-2">Motivo</label>
+        <textarea id="swalMotivo" class="form-control" rows="3" maxlength="250"
+                  placeholder="Explique por qué no puede en la fecha propuesta."></textarea>
+      </div>
+    `,
+    showCancelButton: true,
+    confirmButtonText: "Enviar propuesta",
+    cancelButtonText: "Cancelar",
+    reverseButtons: true,
+    focusConfirm: false,
+
+    preConfirm: function () {
+      const valores = {
+        fecha: document.getElementById("swalNuevaFecha").value,
+        hora: document.getElementById("swalNuevaHora").value,
+        motivo: document.getElementById("swalMotivo").value.trim()
+      };
+
+      if (!valores.fecha || !valores.hora) {
+        Swal.showValidationMessage("Debe indicar la nueva fecha y hora.");
+        return false;
+      }
+
+      if (new Date(`${valores.fecha}T${valores.hora}:00`) <= new Date()) {
+        Swal.showValidationMessage("La fecha y hora deben ser futuras.");
+        return false;
+      }
+
+      if (!valores.motivo) {
+        Swal.showValidationMessage("Debe explicar por qué propone otra fecha.");
+        return false;
+      }
+
+      return valores;
+    }
+  });
+
+  if (!resultado.isConfirmed) {
+    return;
+  }
+
+  try {
+    await proponerOtraFecha(
+      idCita, resultado.value.fecha, resultado.value.hora, resultado.value.motivo
+    );
+    await actualizarHistorial(false);
+    avisoExito("Se envió su propuesta al encargado.");
+  } catch (error) {
+    avisoError(error.message);
+  }
+}
+
+
 // Eliminar
 
 async function confirmarEliminacion(idCita) {
@@ -491,6 +625,8 @@ function mostrarCitas(listaCitas) {
           data-asunto="${escaparHtml(cita.asunto)}"
           data-descripcion="${escaparHtml(cita.descripcion)}"
           data-estado-api="${cita.estadoApi || ""}"
+          data-propuesta-de="${cita.propuestaDe || ""}"
+          data-motivo-propuesta="${escaparHtml(cita.motivoPropuesta)}"
           data-estudiante="${escaparHtml(cita.estudiante)}">
         <td>${escaparHtml(cita.fecha)}</td>
         <td>${escaparHtml(cita.hora)}</td>
@@ -500,20 +636,54 @@ function mostrarCitas(listaCitas) {
           <span class="estado-cita estado-${escaparHtml(cita.estado.toLowerCase())}">
             ${escaparHtml(cita.estado)}
           </span>
+          ${etiquetaDeTurno(cita)}
         </td>
-        <td>
-          <button type="button" class="btn btn-sm btn-outline-primary me-1 btn-editar-cita"
-                  title="Editar cita" aria-label="Editar cita">
-            <i class="bi bi-pencil-square"></i>
-          </button>
-          <button type="button" class="btn btn-sm btn-outline-danger btn-eliminar-cita"
-                  title="Eliminar cita" aria-label="Eliminar cita">
-            <i class="bi bi-trash"></i>
-          </button>
-        </td>
+        <td>${accionesDeFila(cita)}</td>
       </tr>
     `;
   });
+}
+
+// El encargado mandó otra fecha y el docente todavía no contesta.
+function esperaRespuestaDelDocente(cita) {
+  return cita.estadoApi === "POSPUESTA" && cita.propuestaDe === "ENCARGADO";
+}
+
+// Avisa a quién le toca mientras se ponen de acuerdo en la fecha.
+function etiquetaDeTurno(cita) {
+  if (esperaRespuestaDelDocente(cita)) {
+    return '<div class="turno-cita turno-docente">Debe revisar la propuesta</div>';
+  }
+
+  if (cita.estadoApi === "PENDIENTE" && cita.propuestaDe === "DOCENTE") {
+    return '<div class="turno-cita turno-encargado">Esperando al encargado</div>';
+  }
+
+  return "";
+}
+
+// Si el encargado mandó una fecha, lo único que se puede hacer es
+// revisarla. No tiene sentido editar ni borrar lo que él mandó.
+function accionesDeFila(cita) {
+  if (esperaRespuestaDelDocente(cita)) {
+    return `
+      <button type="button" class="btn btn-sm btn-outline-warning btn-revisar-propuesta"
+              title="Revisar propuesta" aria-label="Revisar propuesta">
+        <i class="bi bi-calendar2-check"></i> Revisar
+      </button>
+    `;
+  }
+
+  return `
+    <button type="button" class="btn btn-sm btn-outline-primary me-1 btn-editar-cita"
+            title="Editar cita" aria-label="Editar cita">
+      <i class="bi bi-pencil-square"></i>
+    </button>
+    <button type="button" class="btn btn-sm btn-outline-danger btn-eliminar-cita"
+            title="Eliminar cita" aria-label="Eliminar cita">
+      <i class="bi bi-trash"></i>
+    </button>
+  `;
 }
 
 function mostrarMensajeVacio() {
@@ -547,8 +717,9 @@ if (cuerpoTablaCitas) {
   cuerpoTablaCitas.addEventListener("click", function (evento) {
     const botonEditar = evento.target.closest(".btn-editar-cita");
     const botonEliminar = evento.target.closest(".btn-eliminar-cita");
+    const botonRevisar = evento.target.closest(".btn-revisar-propuesta");
 
-    if (!botonEditar && !botonEliminar) {
+    if (!botonEditar && !botonEliminar && !botonRevisar) {
       return;
     }
 
@@ -558,7 +729,9 @@ if (cuerpoTablaCitas) {
       return;
     }
 
-    if (botonEditar) {
+    if (botonRevisar) {
+      abrirRevisionPropuesta(idCita);
+    } else if (botonEditar) {
       abrirEdicion(idCita);
     } else {
       confirmarEliminacion(idCita);

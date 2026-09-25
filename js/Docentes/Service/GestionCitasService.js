@@ -7,6 +7,11 @@ let estudiantesEncargados = [];
 
 const MARCADOR_SOLICITUD_PADRE = "[SOLICITUD_PADRE]";
 
+// Uso estos textos para saber cuál de los dos mandó la última propuesta
+// y a quién le toca contestar.
+const PROPUESTA_ENCARGADO = "Encargado propone otra fecha:";
+const PROPUESTA_DOCENTE = "Docente propone otra fecha:";
+
 const nombresEstado = {
   PENDIENTE: "Pendiente",
   ACEPTADA: "Aprobado",
@@ -36,9 +41,32 @@ export async function obtenerCitas(idDocente) {
 
   citas = (Array.isArray(citasApi) ? citasApi : [])
     .filter(cita => !cita.citObservaciones?.startsWith(MARCADOR_SOLICITUD_PADRE))
-    .map(convertirCitaParaVista);
+    .map(convertirCitaParaVista)
+    .sort(compararCitas);
 
   return citas;
+}
+
+// Arriba las que hay que contestar y al final las rechazadas.
+const PRIORIDAD_ESTADO = {
+  POSPUESTA: 1,
+  PENDIENTE: 2,
+  ACEPTADA: 3,
+  FINALIZADA: 4,
+  CANCELADA: 5,
+  RECHAZADA: 6
+};
+
+function compararCitas(primera, segunda) {
+  const diferencia =
+    (PRIORIDAD_ESTADO[primera.estadoApi] || 7) - (PRIORIDAD_ESTADO[segunda.estadoApi] || 7);
+
+  if (diferencia !== 0) {
+    return diferencia;
+  }
+
+  // Si están en el mismo estado, primero la más cercana.
+  return (primera.fechaReunion || "").localeCompare(segunda.fechaReunion || "");
 }
 
 
@@ -135,6 +163,39 @@ export async function reprogramarCita(idCita, fecha, hora, observaciones) {
   return actualizarEnMemoria(convertirCitaParaVista(citaActualizada));
 }
 
+// El docente acepta la fecha que le propuso el encargado.
+export async function aceptarPropuesta(idCita) {
+  const citaActualizada = await solicitarApi(`${RUTAS.CITAS}/${idCita}`, {
+    method: "PATCH",
+    body: JSON.stringify({ citEstado: "ACEPTADA" })
+  });
+
+  return actualizarEnMemoria(convertirCitaParaVista(citaActualizada));
+}
+
+// El docente no puede ese día y le manda otra fecha al encargado.
+// La dejo en PENDIENTE porque ahora el que espera es el docente.
+export async function proponerOtraFecha(idCita, fecha, hora, motivo) {
+  if (!fecha || !hora) {
+    throw new Error("Debe indicar la nueva fecha y hora.");
+  }
+
+  if (!motivo || !motivo.trim()) {
+    throw new Error("Debe explicar por qué propone otra fecha.");
+  }
+
+  const citaActualizada = await solicitarApi(`${RUTAS.CITAS}/${idCita}`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      citEstado: "PENDIENTE",
+      citFechaReunion: `${fecha}T${hora}:00`,
+      citObservaciones: `${PROPUESTA_DOCENTE} ${motivo.trim()}`.slice(0, 300)
+    })
+  });
+
+  return actualizarEnMemoria(convertirCitaParaVista(citaActualizada));
+}
+
 export async function cambiarEstadoCita(idCita, estado, observaciones) {
   const cuerpo = { citEstado: estado };
 
@@ -215,8 +276,40 @@ function convertirCitaParaVista(cita) {
     asunto: cita.citMotivo || "",
     descripcion: cita.citObservaciones || "",
     estado: nombresEstado[cita.citEstado] || cita.citEstado,
-    estadoApi: cita.citEstado
+    estadoApi: cita.citEstado,
+    // Quién mandó esta fecha y el motivo que escribió.
+    propuestaDe: quienPropuso(cita.citObservaciones),
+    motivoPropuesta: motivoDeLaPropuesta(cita.citObservaciones)
   };
+}
+
+// Me dice quién propuso la fecha: el encargado, el docente, o nadie.
+function quienPropuso(observaciones) {
+  const texto = String(observaciones || "");
+
+  if (texto.includes(PROPUESTA_ENCARGADO)) {
+    return "ENCARGADO";
+  }
+
+  if (texto.includes(PROPUESTA_DOCENTE)) {
+    return "DOCENTE";
+  }
+
+  return "";
+}
+
+// Me quedo solo con el motivo y le quito el texto de quién propuso.
+function motivoDeLaPropuesta(observaciones) {
+  const texto = String(observaciones || "");
+  const marcador = texto.includes(PROPUESTA_ENCARGADO)
+    ? PROPUESTA_ENCARGADO
+    : texto.includes(PROPUESTA_DOCENTE) ? PROPUESTA_DOCENTE : "";
+
+  if (!marcador) {
+    return "";
+  }
+
+  return texto.slice(texto.indexOf(marcador) + marcador.length).trim();
 }
 
 function actualizarEnMemoria(citaConvertida) {

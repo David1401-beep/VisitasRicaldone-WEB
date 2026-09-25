@@ -74,6 +74,6 @@ if (formPosponer && modalPropuestaEnviada) {
 if (btnCerrarModalPropuesta && modalPropuestaEnviada) {
     btnCerrarModalPropuesta.addEventListener("click", function () {
         modalPropuestaEnviada.classList.remove("active");
-        window.location.href = "solicitudes.html";
+        window.location.href = "solicitudes-docente.html";
     });
 }

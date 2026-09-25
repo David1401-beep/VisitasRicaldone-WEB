@@ -8,7 +8,7 @@ export { validarDatosCita };
 
 export async function obtenerCitas() {
     try {
-        const respuesta = await fetch(ENDPOINTS.CITAS);
+        const respuesta = await fetch(ENDPOINTS.CITAS, { credentials: "include" });
 
         if (!respuesta.ok) throw new Error(`Error ${respuesta.status}`);
 
@@ -28,7 +28,7 @@ export async function obtenerCitas() {
 
 export async function obtenerCitaPorId(idCita) {
     try {
-        const respuesta = await fetch(`${ENDPOINTS.CITAS}/${idCita}`);
+        const respuesta = await fetch(`${ENDPOINTS.CITAS}/${idCita}`, { credentials: "include" });
 
         if (!respuesta.ok) throw new Error(`Error ${respuesta.status}`);
 
@@ -51,6 +51,7 @@ export async function agregarCita(datosCita) {
 
     try {
         const respuesta = await fetch(ENDPOINTS.CITAS, {
+            credentials: "include",
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(citaDTO)
@@ -81,6 +82,7 @@ export async function actualizarCita(idCita, datosCita, estadoActual) {
 
     try {
         const respuesta = await fetch(`${ENDPOINTS.CITAS}/${idCita}`, {
+            credentials: "include",
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(citaDTO)
@@ -107,6 +109,7 @@ export async function actualizarCita(idCita, datosCita, estadoActual) {
 export async function cambiarEstadoCita(idCita, nuevoEstado) {
     try {
         const respuesta = await fetch(`${ENDPOINTS.CITAS}/${idCita}`, {
+            credentials: "include",
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ estado: nuevoEstado.toUpperCase() })
@@ -132,6 +135,7 @@ export async function cambiarEstadoCita(idCita, nuevoEstado) {
 export async function eliminarCita(idCita) {
     try {
         const respuesta = await fetch(`${ENDPOINTS.CITAS}/${idCita}`, {
+            credentials: "include",
             method: "DELETE"
         });
 

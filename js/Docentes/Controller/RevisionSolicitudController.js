@@ -23,7 +23,7 @@ async function cargarSolicitud() {
   if (!idCita) {
     avisoError("No se recibió el ID de la solicitud.");
 
-    setTimeout(() => window.location.replace("solicitudes.html"), 2000);
+    setTimeout(() => window.location.replace("solicitudes-docente.html"), 2000);
     return;
   }
 
@@ -32,7 +32,7 @@ async function cargarSolicitud() {
     mostrarDetalle(detalleSolicitud);
 
     if (btnPosponerSolicitud) {
-      btnPosponerSolicitud.href = `posponer.html?id=${idCita}`;
+      btnPosponerSolicitud.href = `posponer-docente.html?id=${idCita}`;
     }
 
     btnAceptarSolicitud?.classList.remove("disabled");
@@ -125,7 +125,7 @@ if (btnRechazarSolicitud) {
     try {
       await rechazarSolicitud(idCita, motivo);
       avisoExito("La solicitud fue rechazada.");
-      setTimeout(() => window.location.href = "solicitudes.html", 1800);
+      setTimeout(() => window.location.href = "solicitudes-docente.html", 1800);
     } catch (error) {
       avisoError(error.message);
       btnRechazarSolicitud.classList.remove("disabled");
@@ -137,6 +137,6 @@ if (btnRechazarSolicitud) {
 if (btnCerrarModal && modalSolicitudAceptada) {
   btnCerrarModal.addEventListener("click", function () {
     modalSolicitudAceptada.classList.remove("active");
-    window.location.href = "solicitudes.html";
+    window.location.href = "solicitudes-docente.html";
   });
 }

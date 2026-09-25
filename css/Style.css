@@ -357,6 +357,34 @@ body > *:not(header) {
   background-color: #dc3545;
 }
 
+.estado-pospuesta {
+  background-color: #0dcaf0;
+  color: #000000;
+}
+
+.estado-cancelado {
+  background-color: #6c757d;
+}
+
+.estado-finalizado {
+  background-color: #212529;
+}
+
+/* Aviso de a quien le toca responder cuando la cita esta pospuesta. */
+.turno-cita {
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.turno-docente {
+  color: #b36b00;
+}
+
+.turno-encargado {
+  color: #6c757d;
+}
+
 /* Efectos de Hover y Animaciones para el Dashboard */
 
 .hover-scale-card {

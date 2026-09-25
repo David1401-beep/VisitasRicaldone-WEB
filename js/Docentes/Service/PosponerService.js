@@ -4,6 +4,9 @@ import { validarPropuesta } from "./validaciones.js";
 
 const MARCADOR_SOLICITUD_PADRE = "[SOLICITUD_PADRE]";
 
+// Uso el mismo texto que la app móvil, para que al encargado le
+// aparezca como propuesta del docente.
+const PROPUESTA_DOCENTE = "Docente propone otra fecha:";
 
 const LIMITE_OBSERVACIONES = 300;
 
@@ -87,36 +90,27 @@ export async function guardarPropuesta(idCita, fecha, hora, justificacion) {
         throw new Error(validacion.mensaje);
     }
 
-    const cita = await solicitarApi(`${RUTAS.CITAS}/${idCita}`);
+    const motivo = (justificacion || "").trim();
+
+    if (!motivo) {
+        throw new Error("Debe explicar por qué propone otra fecha.");
+    }
 
     return solicitarApi(`${RUTAS.CITAS}/${idCita}`, {
         method: "PATCH",
         body: JSON.stringify({
             citEstado: "POSPUESTA",
-            citObservaciones: construirObservaciones(cita.citObservaciones, justificacion),
+            citObservaciones: construirObservaciones(motivo),
             citFechaReunion: `${fecha}T${hora}:00`
         })
     });
 }
 
-function construirObservaciones(observacionActual, justificacion) {
-    const original = observacionActual || "";
-    const llevaMarcador = original.startsWith(MARCADOR_SOLICITUD_PADRE);
-
-    const cuerpo = llevaMarcador
-        ? original.slice(MARCADOR_SOLICITUD_PADRE.length).trim()
-        : original;
-
-    const texto = [
-        cuerpo,
-        justificacion ? `Reprogramación: ${justificacion.trim()}` : ""
-    ].filter(Boolean).join(" | ");
-
-    const completo = llevaMarcador
-        ? `${MARCADOR_SOLICITUD_PADRE} ${texto}`
-        : texto;
-
-    return completo.slice(0, LIMITE_OBSERVACIONES);
+// Piso el texto anterior en vez de irlo pegando. Si no, después de
+// varias idas y vueltas se pasa del límite y se corta.
+function construirObservaciones(motivo) {
+    return `${MARCADOR_SOLICITUD_PADRE} ${PROPUESTA_DOCENTE} ${motivo}`
+        .slice(0, LIMITE_OBSERVACIONES);
 }
 
 export { MARCADOR_SOLICITUD_PADRE };

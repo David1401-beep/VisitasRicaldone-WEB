@@ -3,6 +3,10 @@ import { RUTAS } from "../../config.js";
 
 const MARCADOR_SOLICITUD_PADRE = "[SOLICITUD_PADRE]";
 
+// Uso estos textos para saber cuál de los dos mandó la última propuesta.
+const PROPUESTA_ENCARGADO = "Encargado propone otra fecha:";
+const PROPUESTA_DOCENTE = "Docente propone otra fecha:";
+
 let estudiantesEnMemoria = null;
 
 export async function obtenerSolicitudes(idDocente) {
@@ -24,8 +28,10 @@ export async function obtenerSolicitudes(idDocente) {
     .map(cita => convertirSolicitud(cita, listaRelaciones, estudiantes));
 }
 
+// Agrego POSPUESTA para que el docente siga viendo las que él movió
+// de fecha. Antes se le desaparecían de la lista.
 function esSolicitudDePadre(cita) {
-  return ["PENDIENTE", "ACEPTADA"].includes(cita.citEstado) &&
+  return ["PENDIENTE", "ACEPTADA", "POSPUESTA"].includes(cita.citEstado) &&
          cita.citObservaciones?.startsWith(MARCADOR_SOLICITUD_PADRE);
 }
 
@@ -59,13 +65,47 @@ function convertirSolicitud(cita, relaciones, estudiantes) {
 
     motivo: cita.citMotivo || "",
 
-    descripcion: cita.citObservaciones
-      ?.slice(MARCADOR_SOLICITUD_PADRE.length)
-      .trim() || cita.citMotivo || "",
+    descripcion: limpiarObservaciones(cita.citObservaciones) || cita.citMotivo || "",
+
+    // Quién mandó la última propuesta: el encargado, el docente, o nadie.
+    propuestaDe: quienPropuso(cita.citObservaciones),
 
     fechaReunion: cita.citFechaReunion,
     estado: cita.citEstado
   };
+}
+
+function quienPropuso(observaciones) {
+  const texto = String(observaciones || "");
+
+  if (texto.includes(PROPUESTA_ENCARGADO)) {
+    return "ENCARGADO";
+  }
+
+  if (texto.includes(PROPUESTA_DOCENTE)) {
+    return "DOCENTE";
+  }
+
+  return "";
+}
+
+// Le quito el marcador y el texto de quién propuso, para dejar el motivo.
+function limpiarObservaciones(observaciones) {
+  let texto = String(observaciones || "");
+
+  if (texto.startsWith(MARCADOR_SOLICITUD_PADRE)) {
+    texto = texto.slice(MARCADOR_SOLICITUD_PADRE.length);
+  }
+
+  [PROPUESTA_ENCARGADO, PROPUESTA_DOCENTE].forEach(marca => {
+    const posicion = texto.indexOf(marca);
+
+    if (posicion >= 0) {
+      texto = texto.slice(posicion + marca.length);
+    }
+  });
+
+  return texto.trim();
 }
 
 export async function aceptarSolicitud(idCita) {
@@ -75,10 +115,8 @@ export async function aceptarSolicitud(idCita) {
   });
 }
 
-/**
- * Rechaza una solicitud y deja constancia del motivo.
- * El marcador se conserva para no perder el origen de la cita.
- */
+// Rechaza la solicitud y guarda el motivo. Dejo el marcador para no perder
+// de vista que la cita la pidió el encargado.
 export async function rechazarSolicitud(idCita, motivo) {
   const cuerpo = { citEstado: "RECHAZADA" };
 
