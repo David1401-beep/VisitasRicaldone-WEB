@@ -1,5 +1,6 @@
 
 import { solicitarApi } from "../../Docentes/Service/ApiService.js";
+import { cerrarSesionApi } from "../../AuthApiService.js";
 import { RUTAS } from "../../config.js";
 
 let administradorEnMemoria = null;
@@ -36,9 +37,12 @@ export async function obtenerPerfilAdministrador() {
   };
 }
 
-export function cerrarSesionAdministrador() {
+export async function cerrarSesionAdministrador() {
   administradorEnMemoria = null;
 
   ["adminId", "adminSesionActiva", "adminCorreo", "adminNombre", "adminRol"]
     .forEach(clave => sessionStorage.removeItem(clave));
+
+  // Sin esto la cookie sigue viva y la sesion nunca se cierra de verdad.
+  await cerrarSesionApi();
 }

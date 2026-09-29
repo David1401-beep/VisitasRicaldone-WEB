@@ -17,8 +17,9 @@ export async function obtenerPerfilSesion() {
 }
 
 
-export function cerrarSesion() {
-  limpiarSesionApi();
+export async function cerrarSesion() {
+  // Espero a que la API borre la cookie antes de salir de la pagina.
+  await limpiarSesionApi();
 
   ["userCorreo", "userId", "userNombre", "userRol", "empleadoId", "docenteId"]
     .forEach(clave => sessionStorage.removeItem(clave));

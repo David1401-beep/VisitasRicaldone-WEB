@@ -25,8 +25,12 @@ document.addEventListener("DOMContentLoaded", async function () {
     escribir(perfilAdminRol, "—");
   }
 
-  btnCerrarSesionAdmin?.addEventListener("click", function () {
-    cerrarSesionAdministrador();
+  btnCerrarSesionAdmin?.addEventListener("click", async function (evento) {
+    // Detengo el enlace para que no se vaya antes de que la API borre
+    // la cookie. Uso replace para que la flecha de atras no regrese aqui.
+    evento.preventDefault();
+    await cerrarSesionAdministrador();
+    window.location.replace(btnCerrarSesionAdmin.getAttribute("href"));
   });
 });
 

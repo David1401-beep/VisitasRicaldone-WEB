@@ -1,19 +1,13 @@
-import {
-    iniciarSesion,
-    validarCorreoInstitucional
-} from "../Service/InicioSesionService.js";
+import { iniciarSesion } from "../Service/InicioSesionService.js";
 
 const formInicioSesion = document.getElementById("loginForm");
 const correoInput = document.getElementById("loginCorreo");
 const contrasenaInput = document.getElementById("loginContrasena");
 
+// Ya no exijo el dominio del colegio: quien dice si el correo sirve es
+// la base de datos, porque hay cuentas registradas con otro dominio.
 correoInput?.addEventListener("input", () => {
-    const correoValido = validarCorreoInstitucional(correoInput.value);
-    correoInput.setCustomValidity(
-        correoInput.value && !correoValido
-            ? "El correo debe terminar en @ricaldone.edu.sv."
-            : ""
-    );
+    correoInput.setCustomValidity("");
 });
 
 contrasenaInput?.addEventListener("input", () => {

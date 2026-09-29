@@ -31,22 +31,47 @@ function pantallaDeLogin() {
   return rolesAdmitidos.includes("DOCENTE") ? LOGIN_DOCENTES : LOGIN_PERSONAL;
 }
 
-// Escondo la pagina mientras reviso, para que no se alcance a ver si
-// al final lo voy a sacar.
-document.documentElement.style.visibility = "hidden";
+function esconder() {
+  document.documentElement.style.visibility = "hidden";
+}
 
-const sesion = await obtenerSesion();
+function mostrar() {
+  document.documentElement.style.visibility = "visible";
+}
 
-if (!sesion) {
-  window.location.replace(pantallaDeLogin());
-} else if (!coincideRol(String(sesion.rol || "").toUpperCase())) {
-  await cerrarSesionApi();
-  window.location.replace(pantallaDeLogin());
-} else {
+async function revisarSesion() {
+  const sesion = await obtenerSesion();
+
+  if (!sesion) {
+    window.location.replace(pantallaDeLogin());
+    return;
+  }
+
+  if (!coincideRol(String(sesion.rol || "").toUpperCase())) {
+    await cerrarSesionApi();
+    window.location.replace(pantallaDeLogin());
+    return;
+  }
+
   // Guardo los datos para que los usen los demas controladores.
   sessionStorage.setItem("usuarioId", sesion.idUsuario);
   sessionStorage.setItem("usuarioCorreo", sesion.email);
   sessionStorage.setItem("usuarioRol", sesion.rol);
 
-  document.documentElement.style.visibility = "visible";
+  mostrar();
 }
+
+// Escondo la pagina mientras reviso, para que no se alcance a ver si
+// al final lo voy a sacar.
+esconder();
+await revisarSesion();
+
+// Al darle a la flecha de atras el navegador devuelve la pagina tal como
+// estaba, sin volver a ejecutar este script. Por eso vuelvo a preguntar
+// aqui: si ya cerro sesion, no alcanza a ver los datos viejos.
+window.addEventListener("pageshow", evento => {
+  if (evento.persisted) {
+    esconder();
+    revisarSesion();
+  }
+});

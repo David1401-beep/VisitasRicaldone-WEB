@@ -1,4 +1,5 @@
 import { solicitarApi } from "../../Docentes/Service/ApiService.js";
+import { cerrarSesionApi } from "../../AuthApiService.js";
 
 export function obtenerCorreoSesion() {
   return sessionStorage.getItem("userCorreo");
@@ -23,10 +24,13 @@ export async function obtenerPerfilSesion() {
   };
 }
 
-export function cerrarSesion() {
+export async function cerrarSesion() {
   sessionStorage.removeItem("userCorreo");
   sessionStorage.removeItem("userId");
   sessionStorage.removeItem("recepcionistaId");
   sessionStorage.removeItem("userNombre");
   sessionStorage.removeItem("userRol");
+
+  // Sin esto la cookie sigue viva y la sesion nunca se cierra de verdad.
+  await cerrarSesionApi();
 }

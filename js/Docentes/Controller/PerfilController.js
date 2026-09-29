@@ -27,8 +27,12 @@ document.addEventListener("DOMContentLoaded", async function () {
     escribir(perfilClave, "—");
   }
 
-  btnLogout?.addEventListener("click", function () {
-    cerrarSesion();
+  btnLogout?.addEventListener("click", async function (evento) {
+    // Detengo el enlace para que no se vaya antes de que la API borre
+    // la cookie. Uso replace para que la flecha de atras no regrese aqui.
+    evento.preventDefault();
+    await cerrarSesion();
+    window.location.replace(btnLogout.getAttribute("href"));
   });
 });
 

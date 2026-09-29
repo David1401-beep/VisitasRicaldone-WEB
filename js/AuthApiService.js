@@ -22,7 +22,7 @@ export async function iniciarSesionPersonal(correo, contrasena) {
   } catch (error) {
     return {
       exito: false,
-      mensaje: "No fue posible conectar con el servicio de autenticación. Verifique que esté ejecutándose en el puerto 8081."
+      mensaje: "No fue posible conectar con el servicio de autenticación. Verifique que esté ejecutándose en el puerto 8080."
     };
   }
 

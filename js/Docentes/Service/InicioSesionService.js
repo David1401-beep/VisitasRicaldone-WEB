@@ -1,7 +1,4 @@
-import { validarCorreoInstitucional } from "./validaciones.js";
 import { iniciarSesionPersonal } from "../../AuthApiService.js";
-
-export { validarCorreoInstitucional };
 
 const ROLES_DOCENTE = [
   "DOCENTE",
@@ -12,13 +9,6 @@ const ROLES_DOCENTE = [
 ];
 
 export async function iniciarSesion(correo, contrasena) {
-  if (!validarCorreoInstitucional(correo)) {
-    return {
-      exito: false,
-      mensaje: "El correo debe terminar en @ricaldone.edu.sv."
-    };
-  }
-
   const resultado = await iniciarSesionPersonal(correo, contrasena);
 
   if (!resultado.exito) {

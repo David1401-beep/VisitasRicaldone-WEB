@@ -2,22 +2,11 @@ import { iniciarSesionPersonal } from "../../AuthApiService.js";
 
 const ROLES_PERMITIDOS = ["ADMINISTRADOR", "RECEPCIONISTA"];
 
-export function validarCorreoAdministrador(correo) {
-  return /^[^@\s]+@ricaldone\.edu\.sv$/i.test(correo.trim());
-}
-
-// Esta pantalla sirve para administradores y recepcionistas: la API-AUTH ya
-// dice a cuál de los dos roles pertenece la cuenta, así que aquí solo se
-// decide a dónde mandarla y con qué claves guardar la sesión.
+// Esta pantalla sirve para administradores y recepcionistas: la API ya dice
+// a cuál de los dos roles pertenece la cuenta, así que aquí solo se decide a
+// dónde mandarla y con qué claves guardar la sesión.
 export async function iniciarSesionAdministrador(correo, contrasena) {
   const correoNormalizado = correo.trim().toLowerCase();
-
-  if (!validarCorreoAdministrador(correoNormalizado)) {
-    return {
-      exito: false,
-      mensaje: "El correo debe terminar en @ricaldone.edu.sv."
-    };
-  }
 
   const resultado = await iniciarSesionPersonal(correoNormalizado, contrasena);
 

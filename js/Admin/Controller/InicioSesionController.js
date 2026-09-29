@@ -1,21 +1,16 @@
 import {
   guardarSesionAdministrador,
-  iniciarSesionAdministrador,
-  validarCorreoAdministrador
+  iniciarSesionAdministrador
 } from "../Service/InicioSesionService.js";
 
 const formInicioSesionAdmin = document.getElementById("loginAdminForm");
 const correoAdminInput = document.getElementById("loginAdminCorreo");
 const contrasenaAdminInput = document.getElementById("loginAdminContrasena");
 
+// Ya no exijo el dominio del colegio: quien dice si el correo sirve es
+// la base de datos, porque hay cuentas registradas con otro dominio.
 correoAdminInput?.addEventListener("input", function () {
-  const correoValido = validarCorreoAdministrador(correoAdminInput.value);
-
-  correoAdminInput.setCustomValidity(
-    correoAdminInput.value && !correoValido
-      ? "El correo debe terminar en @ricaldone.edu.sv."
-      : ""
-  );
+  correoAdminInput.setCustomValidity("");
 });
 
 contrasenaAdminInput?.addEventListener("input", function () {
@@ -27,10 +22,6 @@ formInicioSesionAdmin?.addEventListener("submit", async function (evento) {
 
   correoAdminInput.setCustomValidity("");
   contrasenaAdminInput.setCustomValidity("");
-
-  if (!validarCorreoAdministrador(correoAdminInput.value)) {
-    correoAdminInput.setCustomValidity("El correo debe terminar en @ricaldone.edu.sv.");
-  }
 
   if (!formInicioSesionAdmin.checkValidity()) {
     formInicioSesionAdmin.reportValidity();
