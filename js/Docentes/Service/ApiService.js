@@ -12,7 +12,7 @@ function redirigirALogin() {
     return;
   }
 
-  window.location.replace("/Proyecto-Visitas-Ricaldone-API/pages/inicioSesion-admin.html");
+  window.location.replace("inicioSesion-admin.html");
 }
 
 export async function solicitarApi(ruta, opciones = {}) {

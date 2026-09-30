@@ -6,8 +6,8 @@
 
 import { obtenerSesion, cerrarSesionApi } from "./AuthApiService.js";
 
-const LOGIN_PERSONAL = "/Proyecto-Visitas-Ricaldone-API/pages/inicioSesion-admin.html";
-const LOGIN_DOCENTES = "/Proyecto-Visitas-Ricaldone-API/pages/inicioSesion-docente.html";
+const LOGIN_PERSONAL = "inicioSesion-admin.html";
+const LOGIN_DOCENTES = "inicioSesion-docente.html";
 
 // Los roles los leo de la URL del script. No uso document.currentScript
 // porque en los modulos siempre da null.
