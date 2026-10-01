@@ -35,9 +35,6 @@
                             <a class="nav-link active" aria-current="page" href="inicio-admin.html">Personal</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="estudiantes-admin.html">Estudiantes</a>
-                        </li>
-                        <li class="nav-item">
                             <a class="nav-link" href="catalogos-admin.html">Catálogos</a>
                         </li>
                         <li class="nav-item">
@@ -52,7 +49,7 @@
     <main class="admin-contenido">
         <header class="admin-encabezado text-center">
             <h1>Gestión de Personal</h1>
-            <p>Administradores, docentes y recepcionistas del sistema</p>
+            <p>Administradores, docentes, recepcionistas y estudiantes del sistema</p>
         </header>
 
         <div class="admin-superficie">
@@ -80,10 +77,10 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="claveEmpleado" class="form-label">Clave</label>
+                            <label for="claveEmpleado" class="form-label" id="etiquetaClaveEmpleado">Clave</label>
                             <input type="text" class="form-control" id="claveEmpleado"
                                 placeholder="Clave (solo docentes, ej. DOC021)" maxlength="20">
-                            <div class="form-text">Obligatoria únicamente para docentes.</div>
+                            <div class="form-text" id="ayudaClaveEmpleado">Obligatoria para docentes (ej. DOC021). Para estudiantes es su carnet de 8 dígitos (ej. 20240087).</div>
                         </div>
 
                         <div class="mb-3">
@@ -108,8 +105,28 @@
                                 <option value="DOCENTE TÉCNICO">Docente técnico</option>
                                 <option value="DOCENTE ACADÉMICO">Docente académico</option>
                                 <option value="RECEPCIONISTA">Recepcionista</option>
+                                <option value="ESTUDIANTE">Estudiante</option>
                             </select>
                             <div class="invalid-feedback">Seleccione un rol.</div>
+                        </div>
+
+                        <!-- Solo se muestran cuando el rol es Estudiante -->
+                        <div id="camposEstudiante" class="d-none">
+                            <div class="mb-3">
+                                <label for="gradoEmpleado" class="form-label">Grado</label>
+                                <select class="form-select" id="gradoEmpleado">
+                                    <option value="" selected disabled>Cargando grados...</option>
+                                </select>
+                                <div class="invalid-feedback">Seleccione un grado.</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="academicaEmpleado" class="form-label">Sección académica</label>
+                                <select class="form-select" id="academicaEmpleado">
+                                    <option value="" selected disabled>Cargando secciones...</option>
+                                </select>
+                                <div class="invalid-feedback">Seleccione una sección académica.</div>
+                            </div>
                         </div>
 
                         <div class="d-flex flex-wrap gap-2">
@@ -141,7 +158,7 @@
                         </span>
                         <input type="text" id="inputBuscarEmpleado"
                             class="form-control border-start-0"
-                            placeholder="Buscar por nombre, correo, clave o rol..."
+                            placeholder="Buscar por nombre, correo, clave, carnet o rol..."
                             maxlength="100"
                             aria-label="Buscar personal">
                     </div>
@@ -152,7 +169,7 @@
                                 <tr>
                                     <th scope="col">Nombre</th>
                                     <th scope="col">Apellido</th>
-                                    <th scope="col">Clave</th>
+                                    <th scope="col">Clave / Carnet</th>
                                     <th scope="col">Correo</th>
                                     <th scope="col">Rol</th>
                                     <th scope="col">Acciones</th>

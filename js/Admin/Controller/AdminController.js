@@ -1,8 +1,12 @@
 import {
+  correoDesdeCarnet,
   eliminarEmpleado,
+  etiquetaGrado,
   guardarEmpleado,
+  obtenerAcademicas,
   obtenerEmpleadoPorId,
-  obtenerEmpleados
+  obtenerEmpleados,
+  obtenerGrados
 } from "../Service/AdminService.js";
 import { avisoExito, avisoError, avisoCredenciales, confirmarAccion } from "../../avisos.js";
 
@@ -21,10 +25,112 @@ const btnCancelarEdicion = document.getElementById("btnCancelarEdicion");
 const btnRecargarEmpleados = document.getElementById("btnRecargarEmpleados");
 const mensajeEmpleado = document.getElementById("mensajeEmpleado");
 const inputBuscarEmpleado = document.getElementById("inputBuscarEmpleado");
+const etiquetaClaveEmpleado = document.getElementById("etiquetaClaveEmpleado");
+const camposEstudiante = document.getElementById("camposEstudiante");
+const gradoEmpleadoInput = document.getElementById("gradoEmpleado");
+const academicaEmpleadoInput = document.getElementById("academicaEmpleado");
 
 // La lista completa se guarda para que el buscador filtre sobre ella
 // sin volver a consultar la API en cada tecla.
 let personalCompleto = [];
+let grados = [];
+let academicas = [];
+// Al editar un estudiante se espera a que los grados estén cargados para poder seleccionarlo.
+let catalogosListos = Promise.resolve();
+
+// Para estudiantes el correo se arma solo con el carnet, mientras el
+// administrador no lo escriba a mano.
+let correoEditadoAMano = false;
+
+function esEstudiante() {
+  return rolEmpleadoInput.value === "ESTUDIANTE";
+}
+
+// Muestra los campos de grado y sección solo para estudiantes, y cambia
+// la "clave" por el carnet.
+function actualizarCamposPorRol() {
+  const estudiante = esEstudiante();
+
+  camposEstudiante?.classList.toggle("d-none", !estudiante);
+  gradoEmpleadoInput.required = estudiante;
+  academicaEmpleadoInput.required = estudiante;
+
+  etiquetaClaveEmpleado.textContent = estudiante ? "Carnet" : "Clave";
+  claveEmpleadoInput.placeholder = estudiante
+    ? "Carnet de 8 dígitos (ej. 20240087)"
+    : "Clave (solo docentes, ej. DOC021)";
+
+  if (estudiante && !correoEditadoAMano && claveEmpleadoInput.value.trim()) {
+    correoEmpleadoInput.value = correoDesdeCarnet(claveEmpleadoInput.value);
+  }
+}
+
+// Catálogos de grados y secciones para el estudiante
+
+function crearOpcionVacia(texto) {
+  const opcion = new Option(texto, "", true, true);
+  opcion.disabled = true;
+  return opcion;
+}
+
+function llenarGrados() {
+  gradoEmpleadoInput.innerHTML = "";
+  gradoEmpleadoInput.add(crearOpcionVacia(grados.length ? "Seleccionar grado" : "No hay grados registrados"));
+
+  // Se agrupan por nivel (tercer ciclo, bachillerato...) para que la lista sea fácil de leer.
+  const gradosPorNivel = new Map();
+
+  grados.forEach(grado => {
+    const nivel = grado.nombreNivel || "Sin nivel";
+    if (!gradosPorNivel.has(nivel)) gradosPorNivel.set(nivel, []);
+    gradosPorNivel.get(nivel).push(grado);
+  });
+
+  gradosPorNivel.forEach((lista, nivel) => {
+    const grupo = document.createElement("optgroup");
+    grupo.label = nivel;
+
+    lista
+      .sort((a, b) => etiquetaGrado(a).localeCompare(etiquetaGrado(b), "es", { numeric: true }))
+      .forEach(grado => grupo.appendChild(new Option(etiquetaGrado(grado), grado.idGrado)));
+
+    gradoEmpleadoInput.appendChild(grupo);
+  });
+}
+
+function llenarAcademicas() {
+  academicaEmpleadoInput.innerHTML = "";
+  academicaEmpleadoInput.add(crearOpcionVacia(academicas.length ? "Seleccionar sección" : "No hay secciones registradas"));
+
+  [...academicas]
+    .sort((a, b) => String(a.academica).localeCompare(String(b.academica), "es", { numeric: true }))
+    .forEach(academica => academicaEmpleadoInput.add(new Option(academica.academica, academica.idAcademica)));
+}
+
+async function cargarCatalogos() {
+  if (!gradoEmpleadoInput || !academicaEmpleadoInput) return;
+
+  try {
+    [grados, academicas] = await Promise.all([obtenerGrados(), obtenerAcademicas()]);
+  } catch (error) {
+    gradoEmpleadoInput.innerHTML = "";
+    gradoEmpleadoInput.add(crearOpcionVacia("No se pudieron cargar los grados"));
+    academicaEmpleadoInput.innerHTML = "";
+    academicaEmpleadoInput.add(crearOpcionVacia("No se pudieron cargar las secciones"));
+    return;
+  }
+
+  llenarGrados();
+  llenarAcademicas();
+}
+
+function buscarGrado(id) {
+  return grados.find(grado => String(grado.idGrado) === String(id)) || null;
+}
+
+function buscarAcademica(id) {
+  return academicas.find(academica => String(academica.idAcademica) === String(id)) || null;
+}
 
 function mostrarMensaje(mensaje, tipo, conAviso = true) {
   if (mensajeEmpleado) {
@@ -152,6 +258,8 @@ function limpiarFormulario() {
   formEmpleado.reset();
   formEmpleado.classList.remove("was-validated");
   empleadoIdInput.value = "";
+  correoEditadoAMano = false;
+  actualizarCamposPorRol();
   tituloFormularioEmpleado.textContent = "Agregar o editar personal";
   btnGuardarEmpleado.textContent = "Guardar";
   btnCancelarEdicion.classList.add("d-none");
@@ -173,6 +281,15 @@ async function editarEmpleado(id) {
     contrasenaEmpleadoInput.value = "";
     correoEmpleadoInput.value = empleado.correo;
     rolEmpleadoInput.value = empleado.rol;
+
+    await catalogosListos;
+    gradoEmpleadoInput.value = String(empleado.idGrado ?? "");
+    academicaEmpleadoInput.value = String(empleado.idAcademica ?? "");
+
+    // Si el correo guardado no sigue el formato del carnet, se respeta
+    // y no se reemplaza al cambiar el carnet.
+    correoEditadoAMano = empleado.correo.toLowerCase() !== correoDesdeCarnet(empleado.clave);
+    actualizarCamposPorRol();
 
     tituloFormularioEmpleado.textContent = "Editar registro";
     btnGuardarEmpleado.textContent = "Actualizar";
@@ -206,7 +323,9 @@ formEmpleado?.addEventListener("submit", async function (e) {
     clave: claveEmpleadoInput.value,
     contrasena: contrasenaEmpleadoInput.value,
     correo: correoEmpleadoInput.value,
-    rol: rolEmpleadoInput.value
+    rol: rolEmpleadoInput.value,
+    grado: esEstudiante() ? buscarGrado(gradoEmpleadoInput.value) : null,
+    academica: esEstudiante() ? buscarAcademica(academicaEmpleadoInput.value) : null
   });
 
   btnGuardarEmpleado.disabled = false;
@@ -269,6 +388,22 @@ inputBuscarEmpleado?.addEventListener("input", function () {
 });
 
 btnCancelarEdicion?.addEventListener("click", limpiarFormulario);
+
+rolEmpleadoInput?.addEventListener("change", actualizarCamposPorRol);
+
+claveEmpleadoInput?.addEventListener("input", function () {
+  if (esEstudiante() && !correoEditadoAMano) {
+    correoEmpleadoInput.value = correoDesdeCarnet(this.value);
+  }
+});
+
+correoEmpleadoInput?.addEventListener("input", function () {
+  const correo = this.value.trim().toLowerCase();
+
+  // Si lo deja vacío o igual al sugerido, vuelve a llenarse solo con el carnet.
+  correoEditadoAMano = correo !== "" && correo !== correoDesdeCarnet(claveEmpleadoInput.value);
+});
+
 btnRecargarEmpleados?.addEventListener("click", async function () {
   const listaActualizada = await mostrarEmpleados();
 
@@ -278,4 +413,7 @@ btnRecargarEmpleados?.addEventListener("click", async function () {
   }
 });
 
-if (tablaEmpleadosBody) mostrarEmpleados();
+if (tablaEmpleadosBody) {
+  catalogosListos = cargarCatalogos();
+  mostrarEmpleados();
+}

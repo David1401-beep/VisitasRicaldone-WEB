@@ -30,6 +30,12 @@ const ROLES = {
         prefijo: "doc",
         campoId: "idDocente",
         tipoDocente: "DOCENTE ACADÉMICO"
+    },
+    "ESTUDIANTE": {
+        recurso: "estudiantes",
+        ruta: RUTAS.ESTUDIANTES,
+        prefijo: "est",
+        campoId: "idEstudiante"
     }
 };
 
@@ -37,8 +43,31 @@ const ROLES = {
 const RECURSOS = [
     ROLES["ADMINISTRADOR"],
     ROLES["DOCENTE TÉCNICO"],
-    ROLES["RECEPCIONISTA"]
+    ROLES["RECEPCIONISTA"],
+    ROLES["ESTUDIANTE"]
 ];
+
+// Los estudiantes usan como "clave" su carnet, y su correo se arma con él:
+// 20240087 -> 20240087@ricaldone.edu.sv
+export const DOMINIO_CORREO = "@ricaldone.edu.sv";
+const FORMATO_CARNET = /^\d{8}$/;
+
+export function correoDesdeCarnet(carnet) {
+    const limpio = String(carnet || "").trim();
+    return limpio ? `${limpio}${DOMINIO_CORREO}` : "";
+}
+
+// Texto que identifica a un grado en las listas: "1° año - Desarrollo de Software (1A)"
+export function etiquetaGrado(grado) {
+    if (!grado) return "";
+
+    let texto = grado.grado ?? "";
+
+    if (grado.nombreEspecialidad) texto += ` - ${grado.nombreEspecialidad}`;
+    if (grado.nombreTecnica) texto += ` (${grado.nombreTecnica})`;
+
+    return texto;
+}
 // Identificadores compuestos
 
 function construirId(recurso, id) {
@@ -59,17 +88,21 @@ function buscarConfigPorRecurso(recurso) {
 function convertirRegistro(registro, config) {
     const p = config.prefijo;
 
-    const rol = config.recurso === "docentes"
-        ? registro.docTipo
-        : registro[`${p}Rol`];
+    let rol = registro[`${p}Rol`];
+
+    if (config.recurso === "docentes") rol = registro.docTipo;
+    if (config.recurso === "estudiantes") rol = "ESTUDIANTE";
 
     return {
         id: construirId(config.recurso, registro[config.campoId]),
         nombre: registro[`${p}Nombre`] ?? "",
         apellido: registro[`${p}Apellido`] ?? "",
-        clave: registro.docClave ?? "",   // solo DOCENTE tiene clave
+        // Docentes: su clave (DOC001). Estudiantes: su carnet.
+        clave: registro.docClave ?? registro.estCodigo ?? "",
         correo: registro[`${p}Correo`] ?? "",
-        rol: rol ?? ""
+        rol: rol ?? "",
+        idGrado: registro.idGrado ?? null,
+        idAcademica: registro.idAcademica ?? null
     };
 }
 
@@ -90,6 +123,17 @@ function construirCuerpo(datos, config) {
         cuerpo.docTipo = config.tipoDocente;
     }
 
+    // La tabla ESTUDIANTE guarda, además de los IDs, el grado, la especialidad
+    // y la sección como texto; se toman del catálogo para que siempre coincidan.
+    if (config.recurso === "estudiantes") {
+        cuerpo.estCodigo = datos.clave;
+        cuerpo.estGrado = datos.grado.grado;
+        cuerpo.estEspecialidad = datos.grado.nombreEspecialidad || null;
+        cuerpo.estSeccion = datos.academica.academica;
+        cuerpo.idGrado = datos.grado.idGrado;
+        cuerpo.idAcademica = datos.academica.idAcademica;
+    }
+
     if (datos.contrasena) {
         cuerpo[`${p}Password`] = datos.contrasena;
     }
@@ -105,18 +149,27 @@ function normalizarDatos(datosFormulario) {
         clave: datosFormulario.clave.trim(),
         contrasena: (datosFormulario.contrasena ?? "").trim(),
         correo: datosFormulario.correo.trim().toLowerCase(),
-        rol: datosFormulario.rol.trim().toUpperCase()
+        rol: datosFormulario.rol.trim().toUpperCase(),
+        grado: datosFormulario.grado ?? null,
+        academica: datosFormulario.academica ?? null
     };
 }
 
 
 // Validaciones
 
-async function correoEstaDisponible(correo, idActual) {
-    const personal = await obtenerEmpleados();
-
+// El correo no se puede repetir en ninguna tabla porque todas comparten el mismo login.
+function correoEstaDisponible(personal, correo, idActual) {
     return !personal.some(persona =>
         persona.correo.trim().toLowerCase() === correo &&
+        persona.id !== idActual
+    );
+}
+
+function carnetEstaDisponible(personal, carnet, idActual) {
+    return !personal.some(persona =>
+        persona.rol === "ESTUDIANTE" &&
+        persona.clave.trim() === carnet &&
         persona.id !== idActual
     );
 }
@@ -125,7 +178,7 @@ function interpretarError(error, accion) {
     const mensaje = error.message || "";
 
     if (mensaje.includes("ORA-02292") || mensaje.includes("integrity constraint")) {
-        return "No se puede eliminar: la persona tiene citas, materias o grados asignados. Reasigne esos registros primero.";
+        return "No se puede eliminar: la persona tiene citas, materias, grados o encargados asignados. Reasigne esos registros primero.";
     }
 
     if (mensaje.includes("ORA-00001") || mensaje.includes("unique constraint")) {
@@ -168,6 +221,18 @@ export async function obtenerEmpleadoPorId(idCompuesto) {
     return convertirRegistro(registro, config);
 }
 
+// Catálogos que necesita el formulario cuando el rol es ESTUDIANTE
+
+export async function obtenerGrados() {
+    const lista = await solicitarApi(RUTAS.GRADOS);
+    return Array.isArray(lista) ? lista : [];
+}
+
+export async function obtenerAcademicas() {
+    const lista = await solicitarApi(RUTAS.ACADEMICAS);
+    return Array.isArray(lista) ? lista : [];
+}
+
 // Crear y actualizar
 
 export async function guardarEmpleado(datosFormulario) {
@@ -177,8 +242,31 @@ export async function guardarEmpleado(datosFormulario) {
     if (!config) {
         return {
             exito: false,
-            mensaje: `El rol "${datos.rol}" no tiene una tabla asignada en la base de datos. Seleccione administrador, recepcionista o docente.`
+            mensaje: `El rol "${datos.rol}" no tiene una tabla asignada en la base de datos. Seleccione administrador, recepcionista, docente o estudiante.`
         };
+    }
+
+    if (config.recurso === "estudiantes") {
+        if (!FORMATO_CARNET.test(datos.clave)) {
+            return {
+                exito: false,
+                mensaje: "El carnet del estudiante debe tener 8 dígitos (por ejemplo 20240087)."
+            };
+        }
+
+        if (!datos.correo.endsWith(DOMINIO_CORREO)) {
+            return {
+                exito: false,
+                mensaje: `El correo del estudiante debe ser institucional (${DOMINIO_CORREO}).`
+            };
+        }
+
+        if (!datos.grado || !datos.academica) {
+            return {
+                exito: false,
+                mensaje: "Seleccione el grado y la sección académica del estudiante."
+            };
+        }
     }
 
     if (config.recurso === "docentes" && !datos.clave) {
@@ -196,10 +284,19 @@ export async function guardarEmpleado(datosFormulario) {
     }
 
     try {
-        if (!await correoEstaDisponible(datos.correo, datos.id)) {
+        const personal = await obtenerEmpleados();
+
+        if (!correoEstaDisponible(personal, datos.correo, datos.id)) {
             return {
                 exito: false,
                 mensaje: "Ya existe una persona registrada con ese correo."
+            };
+        }
+
+        if (config.recurso === "estudiantes" && !carnetEstaDisponible(personal, datos.clave, datos.id)) {
+            return {
+                exito: false,
+                mensaje: "Ya existe un estudiante registrado con ese carnet."
             };
         }
 
