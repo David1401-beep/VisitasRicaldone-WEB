@@ -4,7 +4,8 @@ import {
   obtenerEmpleadoPorId,
   obtenerEmpleados
 } from "../Service/AdminService.js";
-import { avisoExito, avisoError, confirmarAccion } from "../../avisos.js";
+import { avisoExito, avisoError, avisoCredenciales, confirmarAccion } from "../../avisos.js";
+import { activarVerContrasena, ocultarContrasena } from "../../verContrasena.js";
 
 const formEmpleado = document.getElementById("formEmpleado");
 const empleadoIdInput = document.getElementById("empleadoId");
@@ -12,6 +13,7 @@ const nombreEmpleadoInput = document.getElementById("nombreEmpleado");
 const apellidoEmpleadoInput = document.getElementById("apellidoEmpleado");
 const claveEmpleadoInput = document.getElementById("claveEmpleado");
 const contrasenaEmpleadoInput = document.getElementById("contrasenaEmpleado");
+const btnVerContrasenaEmpleado = document.getElementById("btnVerContrasenaEmpleado");
 const correoEmpleadoInput = document.getElementById("correoEmpleado");
 const rolEmpleadoInput = document.getElementById("rolEmpleado");
 const tablaEmpleadosBody = document.getElementById("tablaEmpleadosBody");
@@ -26,11 +28,13 @@ const inputBuscarEmpleado = document.getElementById("inputBuscarEmpleado");
 // sin volver a consultar la API en cada tecla.
 let personalCompleto = [];
 
-function mostrarMensaje(mensaje, tipo) {
+function mostrarMensaje(mensaje, tipo, conAviso = true) {
   if (mensajeEmpleado) {
     mensajeEmpleado.textContent = mensaje;
     mensajeEmpleado.className = `alert alert-${tipo}`;
   }
+
+  if (!conAviso) return;
 
   if (tipo === "success") {
     avisoExito(mensaje);
@@ -150,6 +154,7 @@ function limpiarFormulario() {
   formEmpleado.reset();
   formEmpleado.classList.remove("was-validated");
   empleadoIdInput.value = "";
+  ocultarContrasena(contrasenaEmpleadoInput, btnVerContrasenaEmpleado);
   tituloFormularioEmpleado.textContent = "Agregar o editar personal";
   btnGuardarEmpleado.textContent = "Guardar";
   btnCancelarEdicion.classList.add("d-none");
@@ -189,6 +194,10 @@ formEmpleado?.addEventListener("submit", async function (e) {
     return;
   }
 
+  // Se guardan antes de limpiar el formulario para poder mostrarlas al final.
+  const correoIngresado = correoEmpleadoInput.value.trim().toLowerCase();
+  const contrasenaIngresada = contrasenaEmpleadoInput.value.trim();
+
   const textoBoton = btnGuardarEmpleado.textContent;
   btnGuardarEmpleado.disabled = true;
   btnGuardarEmpleado.textContent = "Guardando...";
@@ -206,7 +215,13 @@ formEmpleado?.addEventListener("submit", async function (e) {
   btnGuardarEmpleado.disabled = false;
   btnGuardarEmpleado.textContent = textoBoton;
 
-  mostrarMensaje(resultado.mensaje, resultado.tipo || (resultado.exito ? "success" : "danger"));
+  // Si se asignó contraseña, el aviso de éxito muestra las credenciales.
+  const mostrarCredenciales = resultado.exito && Boolean(contrasenaIngresada);
+  mostrarMensaje(resultado.mensaje, resultado.tipo || (resultado.exito ? "success" : "danger"), !mostrarCredenciales);
+
+  if (mostrarCredenciales) {
+    avisoCredenciales(correoIngresado, contrasenaIngresada, resultado.mensaje);
+  }
 
   if (resultado.exito) {
     limpiarFormulario();
@@ -257,6 +272,8 @@ inputBuscarEmpleado?.addEventListener("input", function () {
 });
 
 btnCancelarEdicion?.addEventListener("click", limpiarFormulario);
+
+activarVerContrasena(contrasenaEmpleadoInput, btnVerContrasenaEmpleado);
 
 btnRecargarEmpleados?.addEventListener("click", async function () {
   const listaActualizada = await mostrarEmpleados();
