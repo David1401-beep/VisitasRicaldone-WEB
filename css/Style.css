@@ -759,3 +759,45 @@ body > *:not(header) {
 
 
 
+
+
+/* ===== Que nada se salga de su caja en pantallas pequenas ===== */
+
+/* Red de seguridad: una palabra muy larga (un correo, una URL) parte de
+   linea en vez de estirar la caja. Solo actua cuando no cabe. */
+body {
+  overflow-wrap: break-word;
+}
+
+/* La pagina nunca se desplaza de lado. Las tablas anchas igual se pueden
+   mover, porque cada una va dentro de su propio table-responsive. */
+body {
+  overflow-x: hidden;
+}
+
+/* Los datos de las pantallas de perfil: el correo es el que mas sufre
+   porque es una sola palabra larga y sin espacios. */
+#perfilCorreo,
+#perfilAdminCorreo,
+#perfilNombre,
+#perfilAdminNombre,
+#perfilClave,
+#perfilRol,
+#perfilAdminRol {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+@media (max-width: 576px) {
+  /* El p-5 de Bootstrap deja 3rem a cada lado. En un telefono eso se come
+     casi la mitad del ancho, por eso aqui se reduce. */
+  .perfil-tarjeta,
+  section.p-5.rounded-4 {
+    padding: 1.25rem !important;
+  }
+
+  /* Las cajas blancas de cada dato tambien van mas ajustadas. */
+  section.p-5.rounded-4 .bg-white.p-3 {
+    padding: 0.75rem !important;
+  }
+}
