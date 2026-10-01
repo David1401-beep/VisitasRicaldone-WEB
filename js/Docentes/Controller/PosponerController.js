@@ -4,6 +4,7 @@ import {
     crearPropuesta,
     guardarPropuesta
 } from "../Service/PosponerService.js";
+import { ajustarCampoHora } from "../../horarioCitas.js";
 import { avisoError } from "../../avisos.js";
 
 const fechaSugeridaInput = document.getElementById("fechaSugerida");
@@ -19,6 +20,9 @@ const idCita = Number(parametros.get("id"));
 
 if (fechaSugeridaInput) {
     fechaSugeridaInput.min = obtenerFechaActual();
+
+    // Ajusta el rango de la hora segun el dia que elija.
+    ajustarCampoHora(fechaSugeridaInput, document.getElementById("horaSugerida"));
 }
 
 if (formPosponer && modalPropuestaEnviada) {

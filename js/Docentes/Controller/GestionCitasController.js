@@ -12,6 +12,7 @@ import {
   aceptarPropuesta,
   proponerOtraFecha
 } from "../Service/GestionCitasService.js";
+import { ajustarCampoHora } from "../../horarioCitas.js";
 import { obtenerIdDocenteActivo } from "../Service/ApiService.js";
 
 const formCita = document.getElementById("formCita");
@@ -184,6 +185,9 @@ function configurarFechaMinima() {
   }
 
   fechaInput.min = fechaDeHoy();
+
+  // Ajusta el rango de la hora segun el dia que elija.
+  ajustarCampoHora(fechaInput, document.getElementById("horaCita"));
 }
 
 function fechaDeHoy() {
