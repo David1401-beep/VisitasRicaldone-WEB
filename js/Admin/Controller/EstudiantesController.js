@@ -9,7 +9,6 @@ import {
   obtenerGrados
 } from "../Service/EstudiantesService.js";
 import { avisoExito, avisoError, avisoCredenciales, confirmarAccion } from "../../avisos.js";
-import { activarVerContrasena, ocultarContrasena } from "../../verContrasena.js";
 
 const formEstudiante = document.getElementById("formEstudiante");
 const estudianteIdInput = document.getElementById("estudianteId");
@@ -20,7 +19,6 @@ const correoEstudianteInput = document.getElementById("correoEstudiante");
 const gradoEstudianteInput = document.getElementById("gradoEstudiante");
 const academicaEstudianteInput = document.getElementById("academicaEstudiante");
 const contrasenaEstudianteInput = document.getElementById("contrasenaEstudiante");
-const btnVerContrasenaEstudiante = document.getElementById("btnVerContrasenaEstudiante");
 const tablaEstudiantesBody = document.getElementById("tablaEstudiantesBody");
 const tituloFormularioEstudiante = document.getElementById("tituloFormularioEstudiante");
 const btnGuardarEstudiante = document.getElementById("btnGuardarEstudiante");
@@ -252,7 +250,6 @@ function limpiarFormulario() {
   formEstudiante.classList.remove("was-validated");
   estudianteIdInput.value = "";
   correoEditadoAMano = false;
-  ocultarContrasena(contrasenaEstudianteInput, btnVerContrasenaEstudiante);
   tituloFormularioEstudiante.textContent = "Registrar estudiante";
   btnGuardarEstudiante.textContent = "Guardar";
   btnCancelarEdicion.classList.add("d-none");
@@ -399,8 +396,6 @@ btnRecargarEstudiantes?.addEventListener("click", async function () {
     mensajeEstudiante.className = "alert alert-info";
   }
 });
-
-activarVerContrasena(contrasenaEstudianteInput, btnVerContrasenaEstudiante);
 
 // Los grados se cargan primero para que la tabla muestre su nombre completo.
 async function iniciar() {

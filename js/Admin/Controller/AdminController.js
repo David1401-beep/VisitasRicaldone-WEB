@@ -5,7 +5,6 @@ import {
   obtenerEmpleados
 } from "../Service/AdminService.js";
 import { avisoExito, avisoError, avisoCredenciales, confirmarAccion } from "../../avisos.js";
-import { activarVerContrasena, ocultarContrasena } from "../../verContrasena.js";
 
 const formEmpleado = document.getElementById("formEmpleado");
 const empleadoIdInput = document.getElementById("empleadoId");
@@ -13,7 +12,6 @@ const nombreEmpleadoInput = document.getElementById("nombreEmpleado");
 const apellidoEmpleadoInput = document.getElementById("apellidoEmpleado");
 const claveEmpleadoInput = document.getElementById("claveEmpleado");
 const contrasenaEmpleadoInput = document.getElementById("contrasenaEmpleado");
-const btnVerContrasenaEmpleado = document.getElementById("btnVerContrasenaEmpleado");
 const correoEmpleadoInput = document.getElementById("correoEmpleado");
 const rolEmpleadoInput = document.getElementById("rolEmpleado");
 const tablaEmpleadosBody = document.getElementById("tablaEmpleadosBody");
@@ -154,7 +152,6 @@ function limpiarFormulario() {
   formEmpleado.reset();
   formEmpleado.classList.remove("was-validated");
   empleadoIdInput.value = "";
-  ocultarContrasena(contrasenaEmpleadoInput, btnVerContrasenaEmpleado);
   tituloFormularioEmpleado.textContent = "Agregar o editar personal";
   btnGuardarEmpleado.textContent = "Guardar";
   btnCancelarEdicion.classList.add("d-none");
@@ -272,9 +269,6 @@ inputBuscarEmpleado?.addEventListener("input", function () {
 });
 
 btnCancelarEdicion?.addEventListener("click", limpiarFormulario);
-
-activarVerContrasena(contrasenaEmpleadoInput, btnVerContrasenaEmpleado);
-
 btnRecargarEmpleados?.addEventListener("click", async function () {
   const listaActualizada = await mostrarEmpleados();
 
