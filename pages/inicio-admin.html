@@ -149,12 +149,11 @@
                                 </div>
 
                                 <div class="mb-3">
-                                    <label for="telefonoEncargado" class="form-label">
-                                        Teléfono <span class="text-secondary fw-normal">(opcional)</span>
-                                    </label>
+                                    <label for="telefonoEncargado" class="form-label">Teléfono</label>
                                     <input type="text" class="form-control" id="telefonoEncargado"
-                                        placeholder="0000-0000" pattern="[0-9]{4}-[0-9]{4}" autocomplete="off">
-                                    <div class="invalid-feedback">El teléfono debe tener el formato 0000-0000.</div>
+                                        placeholder="0000-0000" pattern="[0-9]{4}-[0-9]{4}"
+                                        inputmode="numeric" maxlength="9" autocomplete="off">
+                                    <div class="invalid-feedback">Escriba los 8 dígitos del teléfono.</div>
                                 </div>
 
                                 <div class="mb-3">

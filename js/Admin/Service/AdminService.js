@@ -174,8 +174,7 @@ async function vincularEncargado(idEstudiante, encargado) {
             body: JSON.stringify({
                 encNombre: encargado.nombre,
                 encApellido: encargado.apellido,
-                // La API exige el formato 0000-0000, por eso no mando cadena vacia.
-                encTelefono: encargado.telefono || null,
+                encTelefono: encargado.telefono,
                 encTipo: encargado.tipo
             })
         });
@@ -323,10 +322,10 @@ export async function guardarEmpleado(datosFormulario) {
                 };
             }
 
-            if (encargado.telefono && !/^[0-9]{4}-[0-9]{4}$/.test(encargado.telefono)) {
+            if (!/^[0-9]{4}-[0-9]{4}$/.test(encargado.telefono)) {
                 return {
                     exito: false,
-                    mensaje: "El teléfono del encargado debe tener el formato 0000-0000."
+                    mensaje: "Escriba los 8 dígitos del teléfono del encargado."
                 };
             }
         }

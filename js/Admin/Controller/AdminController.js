@@ -91,6 +91,16 @@ function actualizarCampoOtroParentesco() {
 
 tipoEncargadoInput?.addEventListener("change", actualizarCampoOtroParentesco);
 
+// El telefono solo admite digitos y el guion se pone solo, para que siempre
+// salga con el formato 0000-0000 que piden la API y la base.
+telefonoEncargadoInput?.addEventListener("input", function () {
+  const digitos = this.value.replace(/[^0-9]/g, "").slice(0, 8);
+
+  this.value = digitos.length > 4
+    ? `${digitos.slice(0, 4)}-${digitos.slice(4)}`
+    : digitos;
+});
+
 // Muestra los campos de grado y sección solo para estudiantes, y cambia
 // la "clave" por el carnet.
 function actualizarCamposPorRol() {
@@ -108,6 +118,7 @@ function actualizarCamposPorRol() {
   camposEncargado?.classList.toggle("d-none", !pedirEncargado);
   nombreEncargadoInput.required = pedirEncargado;
   apellidoEncargadoInput.required = pedirEncargado;
+  telefonoEncargadoInput.required = pedirEncargado;
   tipoEncargadoInput.required = pedirEncargado;
   actualizarCampoOtroParentesco();
 
