@@ -53,11 +53,6 @@ async function revisarSesion() {
     return;
   }
 
-  // Guardo los datos para que los usen los demas controladores.
-  sessionStorage.setItem("usuarioId", sesion.idUsuario);
-  sessionStorage.setItem("usuarioCorreo", sesion.email);
-  sessionStorage.setItem("usuarioRol", sesion.rol);
-
   mostrar();
 }
 
