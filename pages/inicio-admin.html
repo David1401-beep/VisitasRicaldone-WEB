@@ -127,6 +127,53 @@
                                 </select>
                                 <div class="invalid-feedback">Seleccione una sección académica.</div>
                             </div>
+
+                            <!-- El encargado se registra junto con el estudiante: sin el,
+                                 el estudiante no puede pedir reuniones desde la app. -->
+                            <div id="camposEncargado">
+                                <hr class="text-secondary">
+                                <h3 class="h6 fw-bold mb-3">Encargado del estudiante</h3>
+
+                                <div class="mb-3">
+                                    <label for="nombreEncargado" class="form-label">Nombre del encargado</label>
+                                    <input type="text" class="form-control" id="nombreEncargado"
+                                        maxlength="50" autocomplete="off">
+                                    <div class="invalid-feedback">Ingrese el nombre del encargado.</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="apellidoEncargado" class="form-label">Apellido del encargado</label>
+                                    <input type="text" class="form-control" id="apellidoEncargado"
+                                        maxlength="50" autocomplete="off">
+                                    <div class="invalid-feedback">Ingrese el apellido del encargado.</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="telefonoEncargado" class="form-label">
+                                        Teléfono <span class="text-secondary fw-normal">(opcional)</span>
+                                    </label>
+                                    <input type="text" class="form-control" id="telefonoEncargado"
+                                        placeholder="0000-0000" pattern="[0-9]{4}-[0-9]{4}" autocomplete="off">
+                                    <div class="invalid-feedback">El teléfono debe tener el formato 0000-0000.</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="tipoEncargado" class="form-label">Parentesco</label>
+                                    <select class="form-select" id="tipoEncargado">
+                                        <option value="" selected disabled>Seleccionar parentesco</option>
+                                        <option value="PADRE">Padre</option>
+                                        <option value="MADRE">Madre</option>
+                                        <option value="HERMANO MAYOR">Hermano mayor</option>
+                                        <option value="HERMANA MAYOR">Hermana mayor</option>
+                                        <option value="TIO">Tío</option>
+                                        <option value="TIA">Tía</option>
+                                        <option value="ABUELO">Abuelo</option>
+                                        <option value="ABUELA">Abuela</option>
+                                        <option value="TUTOR LEGAL">Tutor legal</option>
+                                    </select>
+                                    <div class="invalid-feedback">Seleccione el parentesco.</div>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="d-flex flex-wrap gap-2">

@@ -151,8 +151,51 @@ function normalizarDatos(datosFormulario) {
         correo: datosFormulario.correo.trim().toLowerCase(),
         rol: datosFormulario.rol.trim().toUpperCase(),
         grado: datosFormulario.grado ?? null,
-        academica: datosFormulario.academica ?? null
+        academica: datosFormulario.academica ?? null,
+        encargado: datosFormulario.encargado ?? null
     };
+}
+
+// Crea el encargado y lo une al estudiante recien dado de alta. Son dos
+// llamadas aparte, asi que si alguna falla aviso que el estudiante si quedo
+// creado: hay que volver a entrar y asignarle el encargado.
+async function vincularEncargado(idEstudiante, encargado) {
+    if (!idEstudiante) {
+        return {
+            exito: true,
+            tipo: "warning",
+            mensaje: "El estudiante se creó, pero no se pudo obtener su ID para asignarle el encargado."
+        };
+    }
+
+    try {
+        const nuevoEncargado = await solicitarApi(RUTAS.ENCARGADOS, {
+            method: "POST",
+            body: JSON.stringify({
+                encNombre: encargado.nombre,
+                encApellido: encargado.apellido,
+                // La API exige el formato 0000-0000, por eso no mando cadena vacia.
+                encTelefono: encargado.telefono || null,
+                encTipo: encargado.tipo
+            })
+        });
+
+        await solicitarApi(RUTAS.ESTUDIANTES_ENCARGADOS, {
+            method: "POST",
+            body: JSON.stringify({
+                idEstudiante: Number(idEstudiante),
+                idEncargado: Number(nuevoEncargado.idEncargado)
+            })
+        });
+
+        return { exito: true, mensaje: "Estudiante y encargado registrados correctamente." };
+    } catch (error) {
+        return {
+            exito: true,
+            tipo: "warning",
+            mensaje: `El estudiante se creó, pero no se pudo registrar su encargado: ${error.message}`
+        };
+    }
 }
 
 
@@ -267,6 +310,26 @@ export async function guardarEmpleado(datosFormulario) {
                 mensaje: "Seleccione el grado y la sección académica del estudiante."
             };
         }
+
+        // Se revisa antes de crear nada: si falta un dato del encargado y el
+        // estudiante ya se hubiera creado, quedaria sin encargado igual que antes.
+        if (!datos.id) {
+            const encargado = datos.encargado;
+
+            if (!encargado || !encargado.nombre || !encargado.apellido || !encargado.tipo) {
+                return {
+                    exito: false,
+                    mensaje: "Complete el nombre, el apellido y el parentesco del encargado."
+                };
+            }
+
+            if (encargado.telefono && !/^[0-9]{4}-[0-9]{4}$/.test(encargado.telefono)) {
+                return {
+                    exito: false,
+                    mensaje: "El teléfono del encargado debe tener el formato 0000-0000."
+                };
+            }
+        }
     }
 
     if (config.recurso === "docentes" && !datos.clave) {
@@ -304,10 +367,16 @@ export async function guardarEmpleado(datosFormulario) {
 
         // --- Alta ---
         if (!datos.id) {
-            await solicitarApi(config.ruta, {
+            const creado = await solicitarApi(config.ruta, {
                 method: "POST",
                 body: JSON.stringify(cuerpo)
             });
+
+            // Un estudiante sin encargado no puede pedir reuniones, asi que
+            // el encargado se registra y se vincula en el mismo guardado.
+            if (config.recurso === "estudiantes" && datos.encargado) {
+                return await vincularEncargado(creado?.idEstudiante, datos.encargado);
+            }
 
             return { exito: true, mensaje: "Registro creado correctamente." };
         }

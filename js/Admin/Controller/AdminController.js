@@ -8,7 +8,7 @@ import {
   obtenerEmpleados,
   obtenerGrados
 } from "../Service/AdminService.js";
-import { avisoExito, avisoError, avisoCredenciales, confirmarAccion } from "../../avisos.js";
+import { avisoExito, avisoError, avisoInfo, avisoCredenciales, confirmarAccion } from "../../avisos.js";
 
 const formEmpleado = document.getElementById("formEmpleado");
 const empleadoIdInput = document.getElementById("empleadoId");
@@ -29,6 +29,11 @@ const etiquetaClaveEmpleado = document.getElementById("etiquetaClaveEmpleado");
 const camposEstudiante = document.getElementById("camposEstudiante");
 const gradoEmpleadoInput = document.getElementById("gradoEmpleado");
 const academicaEmpleadoInput = document.getElementById("academicaEmpleado");
+const camposEncargado = document.getElementById("camposEncargado");
+const nombreEncargadoInput = document.getElementById("nombreEncargado");
+const apellidoEncargadoInput = document.getElementById("apellidoEncargado");
+const telefonoEncargadoInput = document.getElementById("telefonoEncargado");
+const tipoEncargadoInput = document.getElementById("tipoEncargado");
 
 // La lista completa se guarda para que el buscador filtre sobre ella
 // sin volver a consultar la API en cada tecla.
@@ -46,6 +51,20 @@ function esEstudiante() {
   return rolEmpleadoInput.value === "ESTUDIANTE";
 }
 
+// Solo hay encargado que registrar cuando se da de alta un estudiante.
+function datosDelEncargado() {
+  if (!esEstudiante() || empleadoIdInput.value) {
+    return null;
+  }
+
+  return {
+    nombre: nombreEncargadoInput.value.trim(),
+    apellido: apellidoEncargadoInput.value.trim(),
+    telefono: telefonoEncargadoInput.value.trim(),
+    tipo: tipoEncargadoInput.value
+  };
+}
+
 // Muestra los campos de grado y sección solo para estudiantes, y cambia
 // la "clave" por el carnet.
 function actualizarCamposPorRol() {
@@ -54,6 +73,16 @@ function actualizarCamposPorRol() {
   camposEstudiante?.classList.toggle("d-none", !estudiante);
   gradoEmpleadoInput.required = estudiante;
   academicaEmpleadoInput.required = estudiante;
+
+  // El encargado solo se pide al dar de alta. Al editar un estudiante que
+  // ya existe se oculta, porque su encargado ya esta registrado y volver a
+  // pedirlo crearia uno repetido.
+  const pedirEncargado = estudiante && !empleadoIdInput.value;
+
+  camposEncargado?.classList.toggle("d-none", !pedirEncargado);
+  nombreEncargadoInput.required = pedirEncargado;
+  apellidoEncargadoInput.required = pedirEncargado;
+  tipoEncargadoInput.required = pedirEncargado;
 
   etiquetaClaveEmpleado.textContent = estudiante ? "Carnet" : "Clave";
   claveEmpleadoInput.placeholder = estudiante
@@ -144,6 +173,9 @@ function mostrarMensaje(mensaje, tipo, conAviso = true) {
     avisoExito(mensaje);
   } else if (tipo === "danger") {
     avisoError(mensaje);
+  } else if (tipo === "warning") {
+    // Se guardo a medias: el aviso tiene que verse, no solo el recuadro.
+    avisoInfo(mensaje, "Revise el registro");
   }
 }
 
@@ -325,7 +357,8 @@ formEmpleado?.addEventListener("submit", async function (e) {
     correo: correoEmpleadoInput.value,
     rol: rolEmpleadoInput.value,
     grado: esEstudiante() ? buscarGrado(gradoEmpleadoInput.value) : null,
-    academica: esEstudiante() ? buscarAcademica(academicaEmpleadoInput.value) : null
+    academica: esEstudiante() ? buscarAcademica(academicaEmpleadoInput.value) : null,
+    encargado: datosDelEncargado()
   });
 
   btnGuardarEmpleado.disabled = false;
