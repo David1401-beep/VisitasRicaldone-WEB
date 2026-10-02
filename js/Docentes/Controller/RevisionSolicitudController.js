@@ -66,9 +66,13 @@ function mostrarPosposicion(detalle) {
   aviso.classList.remove("d-none");
   escribir("motivoPosposicion", detalle.descripcion || "No indicó un motivo.");
 
-  escribir("tituloReunion", "Nueva fecha propuesta");
   escribir("etiquetaFecha", "Fecha propuesta:");
   escribir("etiquetaHora", "Hora propuesta:");
+
+  // El encabezado y el motivo original estorban aqui: el motivo que importa
+  // es el de la posposicion, que ya sale en el recuadro de arriba.
+  ocultar("tituloReunion");
+  ocultar("bloqueMotivoOriginal");
 }
 
 function escribir(id, valor) {
@@ -76,6 +80,14 @@ function escribir(id, valor) {
 
   if (elemento) {
     elemento.textContent = valor;
+  }
+}
+
+function ocultar(id) {
+  const elemento = document.getElementById(id);
+
+  if (elemento) {
+    elemento.hidden = true;
   }
 }
 
