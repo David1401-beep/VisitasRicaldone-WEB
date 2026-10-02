@@ -163,6 +163,17 @@
                                         <option value="" selected disabled>Seleccionar parentesco</option>
                                         <option value="PADRE">Padre</option>
                                         <option value="MADRE">Madre</option>
+                                        <option value="OTRO">Otro</option>
+                                    </select>
+                                    <div class="invalid-feedback">Seleccione el parentesco.</div>
+                                </div>
+
+                                <!-- Aparece al elegir "Otro". Los valores son fijos porque
+                                     la tabla ENCARGADO solo acepta estos nueve. -->
+                                <div class="mb-3 d-none" id="campoOtroParentesco">
+                                    <label for="tipoEncargadoOtro" class="form-label">¿Cuál?</label>
+                                    <select class="form-select" id="tipoEncargadoOtro">
+                                        <option value="" selected disabled>Seleccionar</option>
                                         <option value="HERMANO MAYOR">Hermano mayor</option>
                                         <option value="HERMANA MAYOR">Hermana mayor</option>
                                         <option value="TIO">Tío</option>
@@ -171,7 +182,7 @@
                                         <option value="ABUELA">Abuela</option>
                                         <option value="TUTOR LEGAL">Tutor legal</option>
                                     </select>
-                                    <div class="invalid-feedback">Seleccione el parentesco.</div>
+                                    <div class="invalid-feedback">Indique el parentesco.</div>
                                 </div>
                             </div>
                         </div>

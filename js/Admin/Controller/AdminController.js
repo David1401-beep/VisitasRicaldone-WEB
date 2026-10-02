@@ -34,6 +34,8 @@ const nombreEncargadoInput = document.getElementById("nombreEncargado");
 const apellidoEncargadoInput = document.getElementById("apellidoEncargado");
 const telefonoEncargadoInput = document.getElementById("telefonoEncargado");
 const tipoEncargadoInput = document.getElementById("tipoEncargado");
+const campoOtroParentesco = document.getElementById("campoOtroParentesco");
+const tipoEncargadoOtroInput = document.getElementById("tipoEncargadoOtro");
 
 // La lista completa se guarda para que el buscador filtre sobre ella
 // sin volver a consultar la API en cada tecla.
@@ -61,9 +63,33 @@ function datosDelEncargado() {
     nombre: nombreEncargadoInput.value.trim(),
     apellido: apellidoEncargadoInput.value.trim(),
     telefono: telefonoEncargadoInput.value.trim(),
-    tipo: tipoEncargadoInput.value
+    tipo: parentescoElegido()
   };
 }
+
+// "Otro" no es un parentesco de verdad: el valor bueno esta en la segunda lista.
+function parentescoElegido() {
+  return tipoEncargadoInput.value === "OTRO"
+    ? tipoEncargadoOtroInput.value
+    : tipoEncargadoInput.value;
+}
+
+// Muestra la segunda lista solo cuando hace falta. Nunca la dejo obligatoria
+// estando escondida, porque entonces el formulario no se enviaria y no se
+// veria por que.
+function actualizarCampoOtroParentesco() {
+  const pidiendoEncargado = !camposEncargado.classList.contains("d-none");
+  const esOtro = pidiendoEncargado && tipoEncargadoInput.value === "OTRO";
+
+  campoOtroParentesco.classList.toggle("d-none", !esOtro);
+  tipoEncargadoOtroInput.required = esOtro;
+
+  if (!esOtro) {
+    tipoEncargadoOtroInput.value = "";
+  }
+}
+
+tipoEncargadoInput?.addEventListener("change", actualizarCampoOtroParentesco);
 
 // Muestra los campos de grado y sección solo para estudiantes, y cambia
 // la "clave" por el carnet.
@@ -83,6 +109,7 @@ function actualizarCamposPorRol() {
   nombreEncargadoInput.required = pedirEncargado;
   apellidoEncargadoInput.required = pedirEncargado;
   tipoEncargadoInput.required = pedirEncargado;
+  actualizarCampoOtroParentesco();
 
   etiquetaClaveEmpleado.textContent = estudiante ? "Carnet" : "Clave";
   claveEmpleadoInput.placeholder = estudiante
