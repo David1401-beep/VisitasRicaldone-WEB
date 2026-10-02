@@ -2,6 +2,8 @@ import { solicitarApi } from "./ApiService.js";
 import { RUTAS } from "../../config.js";
 
 const MARCADOR_SOLICITUD_PADRE = "[SOLICITUD_PADRE]";
+const PROPUESTA_ENCARGADO = "Encargado propone otra fecha:";
+const PROPUESTA_DOCENTE = "Docente propone otra fecha:";
 
 
 export async function obtenerDetalleSolicitud(idCita) {
@@ -37,6 +39,11 @@ export async function obtenerDetalleSolicitud(idCita) {
     motivo: cita.citMotivo || "No disponible",
 
     descripcion: limpiarMarcador(cita.citObservaciones),
+
+    // Si el encargado pospuso, aqui viene su razon y abajo quien propuso.
+    // Sin esto el docente veria solo la solicitud original y no sabria
+    // que le estan proponiendo otra fecha.
+    propuestaDe: quienPropuso(cita.citObservaciones),
 
     estado: cita.citEstado,
     fecha: formatearFechaCompleta(fechaHora.fecha),
@@ -82,14 +89,43 @@ export async function rechazarSolicitud(idCita, motivo) {
 }
 
 // Apoyo
+
+// Quien mando la ultima propuesta de fecha, si es que hubo alguna.
+function quienPropuso(observaciones) {
+  const texto = String(observaciones || "");
+
+  if (texto.includes(PROPUESTA_ENCARGADO)) {
+    return "ENCARGADO";
+  }
+
+  if (texto.includes(PROPUESTA_DOCENTE)) {
+    return "DOCENTE";
+  }
+
+  return "";
+}
+
 function limpiarMarcador(observaciones) {
-  if (!observaciones) {
+  let texto = String(observaciones || "");
+
+  if (!texto) {
     return "";
   }
 
-  return observaciones.startsWith(MARCADOR_SOLICITUD_PADRE)
-    ? observaciones.slice(MARCADOR_SOLICITUD_PADRE.length).trim()
-    : observaciones;
+  if (texto.startsWith(MARCADOR_SOLICITUD_PADRE)) {
+    texto = texto.slice(MARCADOR_SOLICITUD_PADRE.length).trim();
+  }
+
+  // Quito tambien el "fulano propone otra fecha:", porque eso se muestra
+  // aparte y dentro del motivo solo estorba.
+  for (const prefijo of [PROPUESTA_ENCARGADO, PROPUESTA_DOCENTE]) {
+    if (texto.startsWith(prefijo)) {
+      texto = texto.slice(prefijo.length).trim();
+      break;
+    }
+  }
+
+  return texto;
 }
 
 function separarFechaHora(fechaReunion) {

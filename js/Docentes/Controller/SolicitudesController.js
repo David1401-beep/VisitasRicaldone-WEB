@@ -36,7 +36,12 @@ function mostrarSolicitudes(listaSolicitudes) {
   listaSolicitudes.forEach(solicitud => {
     tablaSolicitudesPendientesBody.innerHTML += `
       <tr data-id-cita="${solicitud.id}">
-        <td>${solicitud.padre}</td>
+        <td>
+          ${solicitud.padre}
+          ${solicitud.propuestaDe === "ENCARGADO"
+            ? '<span class="badge bg-warning text-dark ms-2">Propuso otra fecha</span>'
+            : ""}
+        </td>
         <td>${solicitud.estudiante}</td>
         <td>${solicitud.codigo}</td>
         <td>${solicitud.correo}</td>

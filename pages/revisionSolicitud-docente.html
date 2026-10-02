@@ -69,15 +69,21 @@
 
                     <hr class="text-secondary mb-4">
 
-                    <h6 class="fw-bold mb-3">Reunión Solicitada</h6>
+                    <h6 class="fw-bold mb-3" id="tituloReunion">Reunión Solicitada</h6>
+
+                    <!-- Solo aparece cuando el encargado propuso otra fecha -->
+                    <div class="alert alert-warning d-none" id="avisoPospuesta" role="alert">
+                        <strong>El encargado propuso otra fecha.</strong>
+                        <span class="d-block mt-1" id="motivoPosposicion"></span>
+                    </div>
 
                     <div class="row mb-4">
                         <div class="col-md-7">
-                            <p class="mb-2"><strong>Fecha Original:</strong> <span id="detalleFechaOriginal">Cargando...</span></p>
+                            <p class="mb-2"><strong id="etiquetaFecha">Fecha Original:</strong> <span id="detalleFechaOriginal">Cargando...</span></p>
                             <p class="mb-0"><strong>Motivo:</strong> <span id="detalleMotivoSolicitud">Cargando...</span></p>
                         </div>
                         <div class="col-md-5 mt-3 mt-md-0">
-                            <p class="mb-2"><strong>Hora Solicitada:</strong> <span id="detalleHoraSolicitada">Cargando...</span></p>
+                            <p class="mb-2"><strong id="etiquetaHora">Hora Solicitada:</strong> <span id="detalleHoraSolicitada">Cargando...</span></p>
                         </div>
                     </div>
                     <div class="acciones-solicitud d-flex justify-content-center flex-wrap gap-4 mt-5 mb-2">

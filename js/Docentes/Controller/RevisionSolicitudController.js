@@ -50,6 +50,25 @@ function mostrarDetalle(detalle) {
   escribir("detalleFechaOriginal", detalle.fecha);
   escribir("detalleMotivoSolicitud", detalle.motivo);
   escribir("detalleHoraSolicitada", detalle.hora);
+
+  mostrarPosposicion(detalle);
+}
+
+// Cuando el encargado propuso otra fecha, la fecha que se ve ya no es la
+// que pidio al inicio sino la nueva. Hay que decirlo y mostrar su razon.
+function mostrarPosposicion(detalle) {
+  const aviso = document.getElementById("avisoPospuesta");
+
+  if (!aviso || detalle.propuestaDe !== "ENCARGADO") {
+    return;
+  }
+
+  aviso.classList.remove("d-none");
+  escribir("motivoPosposicion", detalle.descripcion || "No indicó un motivo.");
+
+  escribir("tituloReunion", "Nueva fecha propuesta");
+  escribir("etiquetaFecha", "Fecha propuesta:");
+  escribir("etiquetaHora", "Hora propuesta:");
 }
 
 function escribir(id, valor) {
