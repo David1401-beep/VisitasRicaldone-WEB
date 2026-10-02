@@ -1,7 +1,6 @@
 import {
   obtenerEspecialidades, guardarEspecialidad, eliminarEspecialidad,
-  obtenerMaterias, guardarMateria, eliminarMateria,
-  obtenerSeccionesTecnicas
+  obtenerMaterias, guardarMateria, eliminarMateria
 } from "../Service/CatalogosService.js";
 import { avisoExito, avisoError, confirmarAccion } from "../../avisos.js";
 
@@ -302,40 +301,5 @@ function crearCelda(texto) {
   btnCancelar?.addEventListener("click", limpiar);
   btnRecargar?.addEventListener("click", cargar);
 
-  cargar();
-})();
-
-// ---------------------------------------------------------------
-// SECCIONES TÉCNICAS (solo lectura)
-// ---------------------------------------------------------------
-(function iniciarSecciones() {
-  const tabla = document.getElementById("tablaSeccionesBody");
-  const btnRecargar = document.getElementById("btnRecargarSecciones");
-
-  if (!tabla) return;
-
-  async function cargar() {
-    tabla.innerHTML = `<tr><td class="text-center text-secondary py-4">Cargando...</td></tr>`;
-
-    try {
-      const lista = await obtenerSeccionesTecnicas();
-      tabla.innerHTML = "";
-
-      if (lista.length === 0) {
-        tabla.innerHTML = `<tr><td class="text-center text-secondary py-4">No hay secciones técnicas registradas.</td></tr>`;
-        return;
-      }
-
-      lista.forEach(item => {
-        const fila = document.createElement("tr");
-        fila.append(crearCelda(item.tecnica));
-        tabla.appendChild(fila);
-      });
-    } catch (error) {
-      tabla.innerHTML = `<tr><td class="text-center text-danger py-4">${error.message}</td></tr>`;
-    }
-  }
-
-  btnRecargar?.addEventListener("click", cargar);
   cargar();
 })();

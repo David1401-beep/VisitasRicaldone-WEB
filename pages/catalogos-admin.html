@@ -49,7 +49,7 @@
     <main class="admin-contenido">
         <header class="admin-encabezado text-center">
             <h1>Catálogos Académicos</h1>
-            <p>Especialidades, materias y secciones técnicas del instituto</p>
+            <p>Especialidades y materias del instituto</p>
         </header>
 
         <div class="admin-superficie">
@@ -61,10 +61,6 @@
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="tab-materias" data-bs-toggle="tab"
                         data-bs-target="#panel-materias" type="button" role="tab">Materias</button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="tab-secciones" data-bs-toggle="tab"
-                        data-bs-target="#panel-secciones" type="button" role="tab">Secciones técnicas</button>
                 </li>
             </ul>
 
@@ -173,32 +169,6 @@
                         </div>
                     </section>
                 </div>
-
-                <!-- SECCIONES TÉCNICAS (solo lectura) -->
-                <div class="tab-pane fade" id="panel-secciones" role="tabpanel">
-                    <section class="admin-panel">
-                        <div class="admin-panel-titulo admin-panel-titulo-lista">
-                            <h2>Secciones técnicas</h2>
-                            <button type="button" id="btnRecargarSecciones" class="btn btn-light btn-sm">
-                                <i class="bi bi-arrow-clockwise" aria-hidden="true"></i> Recargar
-                            </button>
-                        </div>
-                        <div class="admin-panel-contenido">
-                        
-                            <div class="table-responsive">
-                                <table class="table admin-tabla mb-0 align-middle">
-                                    <thead>
-                                        <tr>
-                                            <th scope="col">Sección técnica</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tablaSeccionesBody"></tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </section>
-                </div>
-
             </div>
         </div>
     </main>

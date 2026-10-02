@@ -22,9 +22,8 @@ export const RUTAS = {
 
     NIVELES: "/niveles",                     
     GRADOS: "/grados",                    
-    ACADEMICAS: "/academicas",            
-    SECCIONES_TECNICAS: "/secciones-tecnicas", 
-    ESPECIALIDADES: "/especialidades",        
+    ACADEMICAS: "/academicas",
+    ESPECIALIDADES: "/especialidades",
     MATERIAS: "/materias",                  
 
 

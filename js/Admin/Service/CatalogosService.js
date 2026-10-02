@@ -74,9 +74,3 @@ export async function eliminarMateria(id) {
     return { exito: false, mensaje: interpretarError(error, "eliminar la materia") };
   }
 }
-
-// SECCION TECNICA (solo lectura: son valores fijos, ver nota en la pantalla)
-export async function obtenerSeccionesTecnicas() {
-  const lista = await solicitarApi(RUTAS.SECCIONES_TECNICAS);
-  return Array.isArray(lista) ? lista : [];
-}
