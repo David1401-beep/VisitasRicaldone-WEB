@@ -156,7 +156,7 @@ function convertirCitaParaVista(cita, docentes, relaciones) {
     estudiante: cita.nombreEstudiante?.trim() ||
       relacion?.nombreEstudiante?.trim() ||
       "Estudiante no disponible",
-    motivo: String(cita.citMotivo ?? cita.motivo ?? "").trim() || "Sin motivo",
+    motivo: String(cita.citMotivo ?? cita.motivo ?? "").trim() || "Sin asunto",
     fecha: new Intl.DateTimeFormat("es-SV", {
       day: "2-digit",
       month: "2-digit",
