@@ -122,7 +122,7 @@ function actualizarCamposPorRol() {
   tipoEncargadoInput.required = pedirEncargado;
   actualizarCampoOtroParentesco();
 
-  etiquetaClaveEmpleado.textContent = estudiante ? "Carnet" : "Clave";
+  etiquetaClaveEmpleado.textContent = estudiante ? "Carnet" : "Identificador";
   claveEmpleadoInput.placeholder = estudiante
     ? "Carnet de 8 dígitos (ej. 20240087)"
     : "Clave (solo docentes, ej. DOC021)";
