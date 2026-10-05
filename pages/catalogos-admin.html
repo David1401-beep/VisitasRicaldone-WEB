@@ -62,6 +62,14 @@
                     <button class="nav-link" id="tab-materias" data-bs-toggle="tab"
                         data-bs-target="#panel-materias" type="button" role="tab">Materias</button>
                 </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-secciones" data-bs-toggle="tab"
+                        data-bs-target="#panel-secciones" type="button" role="tab">Secciones</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-asignaciones" data-bs-toggle="tab"
+                        data-bs-target="#panel-asignaciones" type="button" role="tab">Materias por docente</button>
+                </li>
             </ul>
 
             <div class="tab-content" id="contenidoTabsCatalogos">
@@ -164,6 +172,111 @@
                                         </tr>
                                     </thead>
                                     <tbody id="tablaMateriasBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- SECCIONES -->
+                <div class="tab-pane fade" id="panel-secciones" role="tabpanel">
+                    <section class="admin-panel mb-4">
+                        <h2 class="admin-panel-titulo" id="tituloFormularioSeccion">Agregar o editar sección</h2>
+                        <div class="admin-panel-contenido">
+                            <div id="mensajeSeccion" class="alert d-none" role="alert"></div>
+
+                            <form id="formSeccion" novalidate>
+                                <input type="hidden" id="seccionId">
+                                <div class="mb-3">
+                                    <label for="nombreSeccion" class="form-label">Nombre de la sección</label>
+                                    <input type="text" class="form-control" id="nombreSeccion"
+                                        placeholder="Ej. A1" maxlength="60" required>
+                                    <div class="invalid-feedback">Ingrese el nombre de la sección.</div>
+                                </div>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <button type="submit" id="btnGuardarSeccion" class="btn btn-dark">Guardar</button>
+                                    <button type="button" id="btnCancelarSeccion"
+                                        class="btn btn-outline-secondary d-none">Cancelar edición</button>
+                                </div>
+                            </form>
+                        </div>
+                    </section>
+
+                    <section class="admin-panel">
+                        <div class="admin-panel-titulo admin-panel-titulo-lista">
+                            <h2>Lista de secciones</h2>
+                            <button type="button" id="btnRecargarSecciones" class="btn btn-light btn-sm">
+                                <i class="bi bi-arrow-clockwise" aria-hidden="true"></i> Recargar
+                            </button>
+                        </div>
+                        <div class="admin-panel-contenido">
+                            <div class="table-responsive">
+                                <table class="table admin-tabla mb-0 align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Sección</th>
+                                            <th scope="col">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tablaSeccionesBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- MATERIAS POR DOCENTE -->
+                <div class="tab-pane fade" id="panel-asignaciones" role="tabpanel">
+                    <section class="admin-panel mb-4">
+                        <h2 class="admin-panel-titulo">Asignar una materia a un docente</h2>
+                        <div class="admin-panel-contenido">
+                            <div id="mensajeAsignacion" class="alert d-none" role="alert"></div>
+
+                            <p class="text-secondary small">
+                                Una misma materia se le puede asignar a varios docentes;
+                                cada uno la imparte en su sección.
+                            </p>
+
+                            <form id="formAsignacion" novalidate>
+                                <div class="mb-3">
+                                    <label for="docenteAsignacion" class="form-label">Docente</label>
+                                    <select class="form-select" id="docenteAsignacion" required>
+                                        <option value="" selected disabled>Cargando docentes...</option>
+                                    </select>
+                                    <div class="invalid-feedback">Seleccione un docente.</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="materiaAsignacion" class="form-label">Materia</label>
+                                    <select class="form-select" id="materiaAsignacion" required>
+                                        <option value="" selected disabled>Cargando materias...</option>
+                                    </select>
+                                    <div class="invalid-feedback">Seleccione una materia.</div>
+                                </div>
+
+                                <button type="submit" id="btnGuardarAsignacion" class="btn btn-dark">Asignar</button>
+                            </form>
+                        </div>
+                    </section>
+
+                    <section class="admin-panel">
+                        <div class="admin-panel-titulo admin-panel-titulo-lista">
+                            <h2>Materias asignadas</h2>
+                            <button type="button" id="btnRecargarAsignaciones" class="btn btn-light btn-sm">
+                                <i class="bi bi-arrow-clockwise" aria-hidden="true"></i> Recargar
+                            </button>
+                        </div>
+                        <div class="admin-panel-contenido">
+                            <div class="table-responsive">
+                                <table class="table admin-tabla mb-0 align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Docente</th>
+                                            <th scope="col">Materia</th>
+                                            <th scope="col">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tablaAsignacionesBody"></tbody>
                                 </table>
                             </div>
                         </div>

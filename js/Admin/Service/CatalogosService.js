@@ -74,3 +74,74 @@ export async function eliminarMateria(id) {
     return { exito: false, mensaje: interpretarError(error, "eliminar la materia") };
   }
 }
+
+// SECCION (tabla ACADEMICA: es la que se elige al registrar un estudiante)
+export async function obtenerSecciones() {
+  const lista = await solicitarApi(RUTAS.ACADEMICAS);
+  return Array.isArray(lista) ? lista : [];
+}
+
+export async function guardarSeccion(id, nombre) {
+  const cuerpo = { academica: nombre.trim() };
+
+  try {
+    if (id) {
+      await solicitarApi(`${RUTAS.ACADEMICAS}/${id}`, { method: "PUT", body: JSON.stringify(cuerpo) });
+    } else {
+      await solicitarApi(RUTAS.ACADEMICAS, { method: "POST", body: JSON.stringify(cuerpo) });
+    }
+    return { exito: true, mensaje: id ? "Sección actualizada correctamente." : "Sección creada correctamente." };
+  } catch (error) {
+    return { exito: false, mensaje: interpretarError(error, "guardar la sección") };
+  }
+}
+
+export async function eliminarSeccion(id) {
+  try {
+    await solicitarApi(`${RUTAS.ACADEMICAS}/${id}`, { method: "DELETE" });
+    return { exito: true, mensaje: "Sección eliminada correctamente." };
+  } catch (error) {
+    return { exito: false, mensaje: interpretarError(error, "eliminar la sección") };
+  }
+}
+
+// MATERIAS POR DOCENTE
+// Una misma materia puede estar en varios docentes (cada uno la da en su
+// seccion), asi que lo unico que no se permite es repetir el mismo par.
+export async function obtenerAsignaciones() {
+  const lista = await solicitarApi(RUTAS.MATERIA_DOCENTE);
+  return Array.isArray(lista) ? lista : [];
+}
+
+export async function obtenerDocentesParaAsignar() {
+  const lista = await solicitarApi(RUTAS.DOCENTES);
+
+  return (Array.isArray(lista) ? lista : []).map(docente => ({
+    idDocente: docente.idDocente,
+    nombre: `${docente.docNombre || ""} ${docente.docApellido || ""}`.trim()
+  }));
+}
+
+export async function asignarMateria(idDocente, idMateria) {
+  try {
+    await solicitarApi(RUTAS.MATERIA_DOCENTE, {
+      method: "POST",
+      body: JSON.stringify({
+        idDocente: Number(idDocente),
+        idMateria: Number(idMateria)
+      })
+    });
+    return { exito: true, mensaje: "Materia asignada correctamente." };
+  } catch (error) {
+    return { exito: false, mensaje: interpretarError(error, "asignar la materia") };
+  }
+}
+
+export async function quitarAsignacion(id) {
+  try {
+    await solicitarApi(`${RUTAS.MATERIA_DOCENTE}/${id}`, { method: "DELETE" });
+    return { exito: true, mensaje: "Asignación eliminada correctamente." };
+  } catch (error) {
+    return { exito: false, mensaje: interpretarError(error, "eliminar la asignación") };
+  }
+}

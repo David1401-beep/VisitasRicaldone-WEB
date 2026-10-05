@@ -1,6 +1,8 @@
 import {
   obtenerEspecialidades, guardarEspecialidad, eliminarEspecialidad,
-  obtenerMaterias, guardarMateria, eliminarMateria
+  obtenerMaterias, guardarMateria, eliminarMateria,
+  obtenerSecciones, guardarSeccion, eliminarSeccion,
+  obtenerAsignaciones, obtenerDocentesParaAsignar, asignarMateria, quitarAsignacion
 } from "../Service/CatalogosService.js";
 import { avisoExito, avisoError, confirmarAccion } from "../../avisos.js";
 
@@ -301,5 +303,283 @@ function crearCelda(texto) {
   btnCancelar?.addEventListener("click", limpiar);
   btnRecargar?.addEventListener("click", cargar);
 
+  cargar();
+})();
+
+// ---------------------------------------------------------------
+// SECCIONES
+// ---------------------------------------------------------------
+(function iniciarSecciones() {
+  const form = document.getElementById("formSeccion");
+  const idInput = document.getElementById("seccionId");
+  const nombreInput = document.getElementById("nombreSeccion");
+  const tabla = document.getElementById("tablaSeccionesBody");
+  const titulo = document.getElementById("tituloFormularioSeccion");
+  const btnGuardar = document.getElementById("btnGuardarSeccion");
+  const btnCancelar = document.getElementById("btnCancelarSeccion");
+  const btnRecargar = document.getElementById("btnRecargarSecciones");
+  const mensaje = document.getElementById("mensajeSeccion");
+
+  if (!form || !tabla) return;
+
+  let lista = [];
+
+  async function cargar() {
+    tabla.innerHTML = `<tr><td colspan="2" class="text-center text-secondary py-4">Cargando...</td></tr>`;
+
+    try {
+      lista = await obtenerSecciones();
+    } catch (error) {
+      tabla.innerHTML = `<tr><td colspan="2" class="text-center text-danger py-4">${error.message}</td></tr>`;
+      return;
+    }
+
+    dibujar();
+  }
+
+  function dibujar() {
+    tabla.innerHTML = "";
+
+    if (lista.length === 0) {
+      tabla.innerHTML = `<tr><td colspan="2" class="text-center text-secondary py-4">No hay secciones registradas.</td></tr>`;
+      return;
+    }
+
+    lista.forEach(item => {
+      const fila = document.createElement("tr");
+      const celdaAcciones = document.createElement("td");
+      const contenedor = document.createElement("div");
+
+      contenedor.className = "admin-acciones";
+      contenedor.append(
+        crearBotonAccion("Editar", "bi-pencil-fill", "btn-warning", "editar", item.idAcademica),
+        crearBotonAccion("Eliminar", "bi-trash-fill", "btn-danger", "eliminar", item.idAcademica)
+      );
+      celdaAcciones.appendChild(contenedor);
+
+      fila.append(crearCelda(item.academica), celdaAcciones);
+      tabla.appendChild(fila);
+    });
+  }
+
+  function limpiar() {
+    form.reset();
+    form.classList.remove("was-validated");
+    idInput.value = "";
+    titulo.textContent = "Agregar o editar sección";
+    btnGuardar.textContent = "Guardar";
+    btnCancelar.classList.add("d-none");
+  }
+
+  form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    if (!form.checkValidity()) {
+      form.classList.add("was-validated");
+      return;
+    }
+
+    btnGuardar.disabled = true;
+    const resultado = await guardarSeccion(idInput.value, nombreInput.value);
+    btnGuardar.disabled = false;
+
+    mostrarMensaje(mensaje, resultado.mensaje, resultado.exito ? "success" : "danger");
+
+    if (resultado.exito) {
+      limpiar();
+      await cargar();
+    }
+  });
+
+  tabla.addEventListener("click", async function (e) {
+    const boton = e.target.closest("[data-accion]");
+    if (!boton) return;
+
+    const id = boton.dataset.id;
+    const item = lista.find(registro => String(registro.idAcademica) === String(id));
+
+    if (boton.dataset.accion === "editar") {
+      if (!item) return;
+
+      idInput.value = item.idAcademica;
+      nombreInput.value = item.academica;
+      titulo.textContent = "Editar sección";
+      btnGuardar.textContent = "Actualizar";
+      btnCancelar.classList.remove("d-none");
+      form.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+
+    if (boton.dataset.accion === "eliminar") {
+      const confirmado = await confirmarAccion(
+        "¿Eliminar la sección?",
+        `Se eliminará "${item?.academica || "este registro"}". Esta acción no se puede deshacer.`,
+        "Sí, eliminar"
+      );
+      if (!confirmado) return;
+
+      const resultado = await eliminarSeccion(id);
+      mostrarMensaje(mensaje, resultado.mensaje, resultado.exito ? "success" : "danger");
+
+      if (resultado.exito) {
+        if (idInput.value === id) limpiar();
+        await cargar();
+      }
+    }
+  });
+
+  btnCancelar?.addEventListener("click", limpiar);
+  btnRecargar?.addEventListener("click", cargar);
+
+  cargar();
+})();
+
+// ---------------------------------------------------------------
+// MATERIAS POR DOCENTE
+// ---------------------------------------------------------------
+(function iniciarAsignaciones() {
+  const form = document.getElementById("formAsignacion");
+  const docenteInput = document.getElementById("docenteAsignacion");
+  const materiaInput = document.getElementById("materiaAsignacion");
+  const tabla = document.getElementById("tablaAsignacionesBody");
+  const btnGuardar = document.getElementById("btnGuardarAsignacion");
+  const btnRecargar = document.getElementById("btnRecargarAsignaciones");
+  const mensaje = document.getElementById("mensajeAsignacion");
+
+  if (!form || !tabla) return;
+
+  let lista = [];
+
+  function llenarSelect(select, opciones, textoVacio) {
+    select.innerHTML = "";
+
+    const vacia = new Option(opciones.length ? textoVacio : "No hay registros", "");
+    vacia.disabled = true;
+    vacia.selected = true;
+    select.add(vacia);
+
+    opciones.forEach(opcion => select.add(new Option(opcion.texto, opcion.valor)));
+  }
+
+  async function cargarListas() {
+    try {
+      const [docentes, materias] = await Promise.all([
+        obtenerDocentesParaAsignar(),
+        obtenerMaterias()
+      ]);
+
+      llenarSelect(
+        docenteInput,
+        docentes.map(d => ({ texto: d.nombre, valor: d.idDocente })),
+        "Seleccionar docente"
+      );
+
+      llenarSelect(
+        materiaInput,
+        materias.map(m => ({ texto: m.matNombre, valor: m.idMateria })),
+        "Seleccionar materia"
+      );
+    } catch (error) {
+      mostrarMensaje(mensaje, error.message, "danger");
+    }
+  }
+
+  async function cargar() {
+    tabla.innerHTML = `<tr><td colspan="3" class="text-center text-secondary py-4">Cargando...</td></tr>`;
+
+    try {
+      lista = await obtenerAsignaciones();
+    } catch (error) {
+      tabla.innerHTML = `<tr><td colspan="3" class="text-center text-danger py-4">${error.message}</td></tr>`;
+      return;
+    }
+
+    dibujar();
+  }
+
+  function dibujar() {
+    tabla.innerHTML = "";
+
+    if (lista.length === 0) {
+      tabla.innerHTML = `<tr><td colspan="3" class="text-center text-secondary py-4">No hay materias asignadas.</td></tr>`;
+      return;
+    }
+
+    lista.forEach(item => {
+      const fila = document.createElement("tr");
+      const celdaAcciones = document.createElement("td");
+      const contenedor = document.createElement("div");
+
+      contenedor.className = "admin-acciones";
+      contenedor.appendChild(
+        crearBotonAccion("Quitar", "bi-trash-fill", "btn-danger", "eliminar", item.idMateriaDocente)
+      );
+      celdaAcciones.appendChild(contenedor);
+
+      fila.append(
+        crearCelda(item.nombreDocente || "Docente"),
+        crearCelda(item.nombreMateria || "Materia"),
+        celdaAcciones
+      );
+      tabla.appendChild(fila);
+    });
+  }
+
+  form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    if (!form.checkValidity()) {
+      form.classList.add("was-validated");
+      return;
+    }
+
+    // Lo unico prohibido es repetir el mismo par: la misma materia en otro
+    // docente si se permite, que es justo lo que se pidio.
+    const repetida = lista.some(item =>
+      String(item.idDocente) === String(docenteInput.value) &&
+      String(item.idMateria) === String(materiaInput.value)
+    );
+
+    if (repetida) {
+      mostrarMensaje(mensaje, "Ese docente ya tiene asignada esa materia.", "danger");
+      return;
+    }
+
+    btnGuardar.disabled = true;
+    const resultado = await asignarMateria(docenteInput.value, materiaInput.value);
+    btnGuardar.disabled = false;
+
+    mostrarMensaje(mensaje, resultado.mensaje, resultado.exito ? "success" : "danger");
+
+    if (resultado.exito) {
+      form.reset();
+      form.classList.remove("was-validated");
+      await cargar();
+    }
+  });
+
+  tabla.addEventListener("click", async function (e) {
+    const boton = e.target.closest("[data-accion]");
+    if (!boton || boton.dataset.accion !== "eliminar") return;
+
+    const id = boton.dataset.id;
+    const item = lista.find(registro => String(registro.idMateriaDocente) === String(id));
+
+    const confirmado = await confirmarAccion(
+      "¿Quitar la asignación?",
+      `${item?.nombreMateria || "La materia"} dejará de estar asignada a ${item?.nombreDocente || "este docente"}.`,
+      "Sí, quitar"
+    );
+    if (!confirmado) return;
+
+    const resultado = await quitarAsignacion(id);
+    mostrarMensaje(mensaje, resultado.mensaje, resultado.exito ? "success" : "danger");
+
+    if (resultado.exito) await cargar();
+  });
+
+  btnRecargar?.addEventListener("click", cargar);
+
+  cargarListas();
   cargar();
 })();
