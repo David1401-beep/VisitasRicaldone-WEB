@@ -1,13 +1,16 @@
 
 import { API_BASE_URL, RUTAS } from "../../config.js";
+import { cerrarSesionApi } from "../../AuthApiService.js";
 
 export { API_BASE_URL };
 
-// Manda al login que corresponde según dónde esté el usuario.
+// Manda al login que corresponde según la pantalla donde esté el usuario.
+// Se mira el final del nombre del archivo porque todas las páginas viven
+// en pages/; la carpeta por rol ya no existe.
 function redirigirALogin() {
-  const ruta = window.location.pathname;
+  const pagina = window.location.pathname.split("/").pop().toLowerCase();
 
-  if (ruta.includes("/Docentes/")) {
+  if (pagina.endsWith("-docente.html")) {
     window.location.replace("inicioSesion-docente.html");
     return;
   }
@@ -98,7 +101,12 @@ export async function obtenerIdDocenteActivo() {
   return Number(docente.idDocente);
 }
 
-export function cerrarSesion() {
+export async function cerrarSesion() {
+  // Hay que pedirle a la API que borre la cookie. Limpiar solo el
+  // sessionStorage deja la sesion viva en el servidor, y cualquier otra
+  // pestana abierta con ese mismo navegador puede seguir trabajando.
+  await cerrarSesionApi();
+
   sessionStorage.removeItem("docenteId");
   docenteEnMemoria = null;
 }

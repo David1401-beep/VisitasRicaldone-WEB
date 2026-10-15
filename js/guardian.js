@@ -70,3 +70,15 @@ window.addEventListener("pageshow", evento => {
     revisarSesion();
   }
 });
+
+// Si cierran sesion en otra pestana, esta se queda mostrando datos viejos
+// hasta que alguien toque algo. Al volver a ella se vuelve a preguntar:
+// si la sesion ya no existe, sale al login sola.
+//
+// No escondo la pagina antes de preguntar, porque esto corre cada vez que
+// uno cambia de pestana y parpadearia a cada rato.
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) {
+    revisarSesion();
+  }
+});
