@@ -6,6 +6,7 @@ import {
 } from "../Service/PosponerService.js";
 import { ajustarCampoHora } from "../../horarioCitas.js";
 import { avisoError } from "../../avisos.js";
+import { revisar, avisoValidacion } from "../../validaciones.js";
 
 const fechaSugeridaInput = document.getElementById("fechaSugerida");
 const formPosponer = document.getElementById("formPosponer");
@@ -41,6 +42,15 @@ if (formPosponer && modalPropuestaEnviada) {
 
         if (!resultadoValidacion.valido) {
             avisoError(resultadoValidacion.mensaje, "Revise los datos");
+            return;
+        }
+
+        const problema = revisar([
+            { el: justificacionInput, nombre: "motivo", tipo: "texto", min: 5, max: 280 }
+        ]);
+
+        if (problema) {
+            avisoValidacion(problema);
             return;
         }
 

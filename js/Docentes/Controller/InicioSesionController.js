@@ -1,4 +1,5 @@
 import { iniciarSesion } from "../Service/InicioSesionService.js";
+import { revisar, avisoValidacion } from "../../validaciones.js";
 
 const formInicioSesion = document.getElementById("loginForm");
 const correoInput = document.getElementById("loginCorreo");
@@ -23,6 +24,16 @@ if (formInicioSesion) {
 
         if (!formInicioSesion.checkValidity()) {
             formInicioSesion.reportValidity();
+            return;
+        }
+
+        const problema = revisar([
+            { el: correoInput, nombre: "correo", tipo: "correo" },
+            { el: contrasenaInput, nombre: "contraseña" }
+        ]);
+
+        if (problema) {
+            avisoValidacion(problema);
             return;
         }
 

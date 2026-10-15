@@ -1,4 +1,5 @@
 import { solicitarCodigo, verificarCodigo, cambiarPassword } from "./RecuperacionService.js";
+import { revisar, avisoValidacion, bloquearLetras } from "./validaciones.js";
 
 // Los tres pasos viven en la misma pagina. Voy mostrando uno a la vez
 // para no perder el correo ni el codigo entre pantallas.
@@ -21,6 +22,9 @@ document.addEventListener("DOMContentLoaded", function () {
   const mensaje = document.getElementById("recuperarMensaje");
   const enlaceVolver = document.getElementById("enlaceVolver");
 
+  // El codigo es de 6 digitos: no deja escribir letras.
+  bloquearLetras(inputCodigo);
+
   // Si vino desde el login de docentes, que regrese a ese mismo.
   const origen = new URLSearchParams(window.location.search).get("origen");
 
@@ -36,6 +40,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (!formCorreo.checkValidity()) {
       formCorreo.reportValidity();
+      return;
+    }
+
+    const problemaCorreo = revisar([
+      { el: inputCorreo, nombre: "correo", tipo: "correo" }
+    ]);
+
+    if (problemaCorreo) {
+      avisoValidacion(problemaCorreo);
       return;
     }
 
@@ -64,6 +77,15 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
+    const problemaCodigo = revisar([
+      { el: inputCodigo, nombre: "código", tipo: "codigo" }
+    ]);
+
+    if (problemaCodigo) {
+      avisoValidacion(problemaCodigo);
+      return;
+    }
+
     codigo = inputCodigo.value.trim();
 
     await conBoton(btnVerificar, "Verificando...", async function () {
@@ -88,8 +110,17 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
+    const problemaPassword = revisar([
+      { el: inputPassword, nombre: "contraseña nueva", min: 6 }
+    ]);
+
+    if (problemaPassword) {
+      avisoValidacion(problemaPassword);
+      return;
+    }
+
     if (inputPassword.value !== inputRepetida.value) {
-      mostrarError("Las contraseñas no coinciden.");
+      avisoValidacion({ mensaje: "Las contraseñas no coinciden.", el: inputRepetida });
       return;
     }
 

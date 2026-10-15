@@ -5,6 +5,7 @@ import {
   obtenerAsignaciones, obtenerDocentesParaAsignar, asignarMateria, quitarAsignacion
 } from "../Service/CatalogosService.js";
 import { avisoExito, avisoError, confirmarAccion } from "../../avisos.js";
+import { revisar, avisoValidacion } from "../../validaciones.js";
 
 function mostrarMensaje(elemento, mensaje, tipo) {
   if (elemento) {
@@ -111,6 +112,16 @@ function crearCelda(texto) {
 
     if (!form.checkValidity()) {
       form.classList.add("was-validated");
+      return;
+    }
+
+    // El nombre de una especialidad son palabras, no lleva numeros.
+    const problema = revisar([
+      { el: nombreInput, nombre: "nombre de la especialidad", tipo: "letras", min: 3, max: 60 }
+    ]);
+
+    if (problema) {
+      avisoValidacion(problema);
       return;
     }
 
@@ -250,6 +261,16 @@ function crearCelda(texto) {
     }
 
     btnGuardar.disabled = true;
+    // Una materia puede llevar numero ("Taller 1"), pero no ser solo numeros.
+    const problema = revisar([
+      { el: nombreInput, nombre: "nombre de la materia", tipo: "texto", min: 3, max: 60 }
+    ]);
+
+    if (problema) {
+      avisoValidacion(problema);
+      return;
+    }
+
     const resultado = await guardarMateria(idInput.value, nombreInput.value, tipoInput.value);
     btnGuardar.disabled = false;
 
@@ -380,6 +401,16 @@ function crearCelda(texto) {
     }
 
     btnGuardar.disabled = true;
+    // Las secciones son del tipo A1 o B2: letra y numero juntos.
+    const problema = revisar([
+      { el: nombreInput, nombre: "nombre de la sección", tipo: "texto", max: 60 }
+    ]);
+
+    if (problema) {
+      avisoValidacion(problema);
+      return;
+    }
+
     const resultado = await guardarSeccion(idInput.value, nombreInput.value);
     btnGuardar.disabled = false;
 

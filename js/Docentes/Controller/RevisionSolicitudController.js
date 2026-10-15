@@ -4,6 +4,7 @@ import {
   obtenerDetalleSolicitud
 } from "../Service/RevisionSolicitudService.js";
 import { avisoError, avisoExito, confirmarAccion } from "../../avisos.js";
+import { revisarValor } from "../../validaciones.js";
 
 const parametros = new URLSearchParams(window.location.search);
 const idCita = Number(parametros.get("id"));
@@ -141,7 +142,18 @@ if (btnRechazarSolicitud) {
         showCancelButton: true,
         confirmButtonText: "Enviar",
         cancelButtonText: "Cancelar",
-        reverseButtons: true
+        reverseButtons: true,
+        // El motivo es opcional, pero si lo escriben no puede ser solo numeros.
+        preConfirm: valor => {
+          const problema = revisarValor(valor, { nombre: "motivo", tipo: "texto", max: 250, opcional: true });
+
+          if (problema) {
+            Swal.showValidationMessage(problema);
+            return false;
+          }
+
+          return valor;
+        }
       });
 
       if (!respuesta.isConfirmed) {

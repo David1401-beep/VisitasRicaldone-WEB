@@ -13,6 +13,7 @@ import {
   proponerOtraFecha
 } from "../Service/GestionCitasService.js";
 import { ajustarCampoHora } from "../../horarioCitas.js";
+import { revisar, revisarValor, avisoValidacion } from "../../validaciones.js";
 import { obtenerIdDocenteActivo } from "../Service/ApiService.js";
 
 const formCita = document.getElementById("formCita");
@@ -145,6 +146,16 @@ if (formCita) {
 
     if (!resultadoValidacion.valido) {
       avisoError(resultadoValidacion.mensaje);
+      return;
+    }
+
+    const problema = revisar([
+      { el: asuntoInput, nombre: "asunto", tipo: "texto", min: 3, max: 250 },
+      { el: descripcionInput, nombre: "descripción", tipo: "texto", min: 5, max: 300 }
+    ]);
+
+    if (problema) {
+      avisoValidacion(problema);
       return;
     }
 
@@ -322,13 +333,12 @@ async function abrirEdicion(idCita) {
         estado: document.getElementById("swalEstado").value
       };
 
-      if (!valores.asunto) {
-        Swal.showValidationMessage("El asunto es obligatorio.");
-        return false;
-      }
+      const problemaTexto =
+        revisarValor(valores.asunto, { nombre: "asunto", tipo: "texto", min: 3, max: 250 }) ||
+        revisarValor(valores.descripcion, { nombre: "descripción", tipo: "texto", max: 300, opcional: true });
 
-      if (valores.asunto.length > 250) {
-        Swal.showValidationMessage("El asunto no puede exceder 250 caracteres.");
+      if (problemaTexto) {
+        Swal.showValidationMessage(problemaTexto);
         return false;
       }
 
@@ -467,8 +477,10 @@ async function abrirContrapropuesta(idCita, estudiante) {
         return false;
       }
 
-      if (!valores.motivo) {
-        Swal.showValidationMessage("Debe explicar por qué propone otra fecha.");
+      const problemaMotivo = revisarValor(valores.motivo, { nombre: "motivo", tipo: "texto", min: 5, max: 280 });
+
+      if (problemaMotivo) {
+        Swal.showValidationMessage(problemaMotivo);
         return false;
       }
 

@@ -2,6 +2,7 @@ import {
   guardarSesionAdministrador,
   iniciarSesionAdministrador
 } from "../Service/InicioSesionService.js";
+import { revisar, avisoValidacion } from "../../validaciones.js";
 
 const formInicioSesionAdmin = document.getElementById("loginAdminForm");
 const correoAdminInput = document.getElementById("loginAdminCorreo");
@@ -25,6 +26,16 @@ formInicioSesionAdmin?.addEventListener("submit", async function (evento) {
 
   if (!formInicioSesionAdmin.checkValidity()) {
     formInicioSesionAdmin.reportValidity();
+    return;
+  }
+
+  const problema = revisar([
+    { el: correoAdminInput, nombre: "correo", tipo: "correo" },
+    { el: contrasenaAdminInput, nombre: "contraseña" }
+  ]);
+
+  if (problema) {
+    avisoValidacion(problema);
     return;
   }
 

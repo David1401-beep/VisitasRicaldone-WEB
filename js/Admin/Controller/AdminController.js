@@ -9,6 +9,7 @@ import {
   obtenerGrados
 } from "../Service/AdminService.js";
 import { avisoExito, avisoError, avisoInfo, avisoCredenciales, confirmarAccion } from "../../avisos.js";
+import { revisar, avisoValidacion, bloquearNumeros } from "../../validaciones.js";
 
 const formEmpleado = document.getElementById("formEmpleado");
 const empleadoIdInput = document.getElementById("empleadoId");
@@ -51,6 +52,43 @@ let correoEditadoAMano = false;
 
 function esEstudiante() {
   return rolEmpleadoInput.value === "ESTUDIANTE";
+}
+
+// Que se le pide a cada campo. El identificador cambia segun el rol: a un
+// estudiante se le pide el carnet de 8 digitos y a un docente su clave.
+function camposAValidar() {
+  const estudiante = esEstudiante();
+  const esAlta = !empleadoIdInput.value;
+
+  const campos = [
+    { el: nombreEmpleadoInput, nombre: "nombre", tipo: "letras", max: 50 },
+    { el: apellidoEmpleadoInput, nombre: "apellido", tipo: "letras", max: 50 },
+    { el: correoEmpleadoInput, nombre: "correo", tipo: "correo" }
+  ];
+
+  if (estudiante) {
+    campos.push({ el: claveEmpleadoInput, nombre: "carnet", tipo: "carnet" });
+  } else if (rolEmpleadoInput.value.startsWith("DOCENTE")) {
+    campos.push({ el: claveEmpleadoInput, nombre: "identificador", tipo: "texto", max: 20 });
+  }
+
+  // Al editar se deja en blanco para no cambiarla.
+  campos.push({
+    el: contrasenaEmpleadoInput,
+    nombre: "contraseña",
+    min: 6,
+    opcional: !esAlta
+  });
+
+  if (estudiante && esAlta) {
+    campos.push(
+      { el: nombreEncargadoInput, nombre: "nombre del encargado", tipo: "letras", max: 50 },
+      { el: apellidoEncargadoInput, nombre: "apellido del encargado", tipo: "letras", max: 50 },
+      { el: telefonoEncargadoInput, nombre: "teléfono del encargado", tipo: "telefono" }
+    );
+  }
+
+  return campos;
 }
 
 // Solo hay encargado que registrar cuando se da de alta un estudiante.
@@ -378,6 +416,13 @@ formEmpleado?.addEventListener("submit", async function (e) {
     return;
   }
 
+  const problema = revisar(camposAValidar());
+
+  if (problema) {
+    avisoValidacion(problema);
+    return;
+  }
+
   // Se guardan antes de limpiar el formulario para poder mostrarlas al final.
   const correoIngresado = correoEmpleadoInput.value.trim().toLowerCase();
   const contrasenaIngresada = contrasenaEmpleadoInput.value.trim();
@@ -459,6 +504,15 @@ inputBuscarEmpleado?.addEventListener("input", function () {
 });
 
 btnCancelarEdicion?.addEventListener("click", limpiarFormulario);
+
+// En los nombres el numero ni siquiera se alcanza a escribir: se descarta
+// mientras teclean, para que se entienda que ahi no van.
+bloquearNumeros(
+  nombreEmpleadoInput,
+  apellidoEmpleadoInput,
+  nombreEncargadoInput,
+  apellidoEncargadoInput
+);
 
 rolEmpleadoInput?.addEventListener("change", actualizarCamposPorRol);
 
