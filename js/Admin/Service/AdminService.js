@@ -85,6 +85,12 @@ function buscarConfigPorRecurso(recurso) {
 
 // Conversión API → formulario
 
+// Docentes: DOC001. Administradores: ADM001. Recepcionistas: REC001.
+// Estudiantes: su carnet.
+function identificadorDe(registro) {
+    return registro?.docClave ?? registro?.admIdentificador ?? registro?.recIdentificador ?? registro?.estCodigo ?? "";
+}
+
 function convertirRegistro(registro, config) {
     const p = config.prefijo;
 
@@ -97,8 +103,7 @@ function convertirRegistro(registro, config) {
         id: construirId(config.recurso, registro[config.campoId]),
         nombre: registro[`${p}Nombre`] ?? "",
         apellido: registro[`${p}Apellido`] ?? "",
-        // Docentes: su clave (DOC001). Estudiantes: su carnet.
-        clave: registro.docClave ?? registro.estCodigo ?? "",
+        clave: identificadorDe(registro),
         correo: registro[`${p}Correo`] ?? "",
         rol: rol ?? "",
         idGrado: registro.idGrado ?? null,
@@ -375,8 +380,10 @@ export async function guardarEmpleado(datosFormulario) {
                 return await vincularEncargado(creado?.idEstudiante, datos.encargado);
             }
 
-            if (creado?.docClave) {
-                return { exito: true, mensaje: `Docente registrado con el identificador ${creado.docClave}.` };
+            const identificador = identificadorDe(creado);
+
+            if (identificador && config.recurso !== "estudiantes") {
+                return { exito: true, mensaje: `Registro creado con el identificador ${identificador}.` };
             }
 
             return { exito: true, mensaje: "Registro creado correctamente." };

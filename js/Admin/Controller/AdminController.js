@@ -176,37 +176,55 @@ function actualizarCamposPorRol() {
   }
 }
 
-// Administradores y recepcionistas no tienen identificador. El del docente
-// no se escribe: se muestra el que tiene, o el que le tocara si es nuevo.
+// Prefijo del identificador y tabla de cada rol que no es estudiante.
+const IDENTIFICADORES = {
+  "ADMINISTRADOR": { prefijo: "ADM", recurso: "administradores" },
+  "RECEPCIONISTA": { prefijo: "REC", recurso: "recepcionistas" },
+  "DOCENTE TÉCNICO": { prefijo: "DOC", recurso: "docentes" },
+  "DOCENTE ACADÉMICO": { prefijo: "DOC", recurso: "docentes" }
+};
+
+// Solo el carnet se escribe. Los demas identificadores los pone la API: se
+// muestra el que ya tiene el registro, o el que le tocara si es nuevo.
 function actualizarCampoClave() {
   const estudiante = esEstudiante();
-  const docente = esDocente();
-  const editandoDocente = empleadoIdInput.value.startsWith("docentes:");
+  const identificador = IDENTIFICADORES[rolEmpleadoInput.value];
 
-  campoClaveEmpleado.classList.toggle("d-none", !estudiante && !docente);
-  claveEmpleadoInput.readOnly = docente;
+  campoClaveEmpleado.classList.toggle("d-none", !estudiante && !identificador);
+  claveEmpleadoInput.readOnly = !estudiante;
   etiquetaClaveEmpleado.textContent = estudiante ? "Carnet" : "Identificador";
+
+  // En celular el carnet abre el teclado de numeros.
+  claveEmpleadoInput.inputMode = estudiante ? "numeric" : "text";
+  claveEmpleadoInput.maxLength = estudiante ? 8 : 20;
 
   if (estudiante) {
     claveEmpleadoInput.placeholder = "Carnet de 8 dígitos (ej. 20240087)";
-    ayudaClaveEmpleado.textContent = "El correo se llena solo con el carnet.";
+    ayudaClaveEmpleado.textContent = "Solo números. El correo se llena solo con el carnet.";
 
-    // Si venia de docente, la clave DOC no sirve como carnet.
-    if (/^DOC/i.test(claveEmpleadoInput.value)) {
+    // Si venia de otro rol, su identificador (DOC001, ADM001...) no sirve como carnet.
+    if (!/^\d*$/.test(claveEmpleadoInput.value)) {
       claveEmpleadoInput.value = "";
     }
     return;
   }
 
-  if (!docente) return;
+  if (!identificador) return;
+
+  const { prefijo, recurso } = identificador;
+  const mismoRegistro = empleadoIdInput.value.startsWith(`${recurso}:`);
 
   claveEmpleadoInput.placeholder = "Se asigna al guardar";
-  ayudaClaveEmpleado.textContent = "Se genera solo y en orden (DOC001, DOC002...).";
+  ayudaClaveEmpleado.textContent = `Se genera solo y en orden (${prefijo}001, ${prefijo}002...).`;
 
-  if (editandoDocente) {
+  if (mismoRegistro) {
     claveEmpleadoInput.value = claveDelRegistro;
-  } else {
+  } else if (prefijo === "DOC") {
     mostrarSiguienteClave();
+  } else {
+    // El de administradores y recepcionistas sale del numero que la base le
+    // da al guardar, asi que no se puede saber antes.
+    claveEmpleadoInput.value = "";
   }
 }
 
@@ -627,7 +645,17 @@ rolEmpleadoInput?.addEventListener("change", actualizarCamposPorRol);
 gradoEmpleadoInput?.addEventListener("change", llenarAcademicas);
 
 claveEmpleadoInput?.addEventListener("input", function () {
-  if (esEstudiante() && !correoEditadoAMano) {
+  if (!esEstudiante()) return;
+
+  // El carnet solo lleva numeros: las letras ni se alcanzan a escribir,
+  // igual si lo pegan.
+  const limpio = this.value.replace(/[^0-9]/g, "").slice(0, 8);
+
+  if (limpio !== this.value) {
+    this.value = limpio;
+  }
+
+  if (!correoEditadoAMano) {
     correoEmpleadoInput.value = correoDesdeCarnet(this.value);
   }
 });
