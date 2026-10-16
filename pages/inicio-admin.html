@@ -94,11 +94,12 @@
                             </div>
                         </div>
 
-                        <div class="mb-3">
+                        <!-- Solo docentes y estudiantes tienen identificador. El del
+                             docente lo pone la API en orden; el carnet se escribe. -->
+                        <div class="mb-3 d-none" id="campoClaveEmpleado">
                             <label for="claveEmpleado" class="form-label" id="etiquetaClaveEmpleado">Identificador</label>
-                            <input type="text" class="form-control" id="claveEmpleado"
-                                placeholder="Identificador (solo docentes, ej. DOC021)" maxlength="20">
-                            <div class="form-text" id="ayudaClaveEmpleado">Obligatorio para docentes (ej. DOC021). Para estudiantes es su carnet de 8 dígitos (ej. 20240087).</div>
+                            <input type="text" class="form-control" id="claveEmpleado" maxlength="20">
+                            <div class="form-text" id="ayudaClaveEmpleado"></div>
                         </div>
 
                         <div class="mb-3">
@@ -232,7 +233,6 @@
                             <thead>
                                 <tr>
                                     <th scope="col">Nombre</th>
-                                    <th scope="col">Apellido</th>
                                     <th scope="col">Identificador / Carnet</th>
                                     <th scope="col">Correo</th>
                                     <th scope="col">Rol</th>

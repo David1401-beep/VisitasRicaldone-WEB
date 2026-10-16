@@ -118,8 +118,8 @@ function construirCuerpo(datos, config) {
     };
 
 
+    // La clave del docente no se manda: la API le pone la siguiente en orden.
     if (config.recurso === "docentes") {
-        cuerpo.docClave = datos.clave;
         cuerpo.docTipo = config.tipoDocente;
     }
 
@@ -275,6 +275,11 @@ export async function obtenerAcademicas() {
     return Array.isArray(lista) ? lista : [];
 }
 
+// Solo es para mostrarla en el formulario: la que vale es la que pone la API al guardar.
+export async function obtenerSiguienteClaveDocente() {
+    return await solicitarApi(`${RUTAS.DOCENTES}/siguiente-clave`);
+}
+
 // Crear y actualizar
 
 export async function guardarEmpleado(datosFormulario) {
@@ -331,13 +336,6 @@ export async function guardarEmpleado(datosFormulario) {
         }
     }
 
-    if (config.recurso === "docentes" && !datos.clave) {
-        return {
-            exito: false,
-            mensaje: "Los docentes necesitan una clave (por ejemplo DOC001)."
-        };
-    }
-
     if (!datos.id && !datos.contrasena) {
         return {
             exito: false,
@@ -375,6 +373,10 @@ export async function guardarEmpleado(datosFormulario) {
             // el encargado se registra y se vincula en el mismo guardado.
             if (config.recurso === "estudiantes" && datos.encargado) {
                 return await vincularEncargado(creado?.idEstudiante, datos.encargado);
+            }
+
+            if (creado?.docClave) {
+                return { exito: true, mensaje: `Docente registrado con el identificador ${creado.docClave}.` };
             }
 
             return { exito: true, mensaje: "Registro creado correctamente." };

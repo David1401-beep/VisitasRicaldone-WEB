@@ -6,7 +6,8 @@ import {
   obtenerAcademicas,
   obtenerEmpleadoPorId,
   obtenerEmpleados,
-  obtenerGrados
+  obtenerGrados,
+  obtenerSiguienteClaveDocente
 } from "../Service/AdminService.js";
 import { avisoExito, avisoError, avisoInfo, avisoCredenciales, confirmarAccion } from "../../avisos.js";
 import { revisar, avisoValidacion, bloquearNumeros } from "../../validaciones.js";
@@ -27,6 +28,8 @@ const btnRecargarEmpleados = document.getElementById("btnRecargarEmpleados");
 const mensajeEmpleado = document.getElementById("mensajeEmpleado");
 const inputBuscarEmpleado = document.getElementById("inputBuscarEmpleado");
 const etiquetaClaveEmpleado = document.getElementById("etiquetaClaveEmpleado");
+const campoClaveEmpleado = document.getElementById("campoClaveEmpleado");
+const ayudaClaveEmpleado = document.getElementById("ayudaClaveEmpleado");
 const camposEstudiante = document.getElementById("camposEstudiante");
 const gradoEmpleadoInput = document.getElementById("gradoEmpleado");
 const academicaEmpleadoInput = document.getElementById("academicaEmpleado");
@@ -50,12 +53,20 @@ let catalogosListos = Promise.resolve();
 // administrador no lo escriba a mano.
 let correoEditadoAMano = false;
 
+// La clave del docente que se esta editando, para volver a mostrarla si
+// cambian el rol y lo regresan a docente.
+let claveDelRegistro = "";
+
 function esEstudiante() {
   return rolEmpleadoInput.value === "ESTUDIANTE";
 }
 
-// Que se le pide a cada campo. El identificador cambia segun el rol: a un
-// estudiante se le pide el carnet de 8 digitos y a un docente su clave.
+function esDocente() {
+  return rolEmpleadoInput.value.startsWith("DOCENTE");
+}
+
+// Que se le pide a cada campo. Al estudiante se le pide el carnet de 8
+// digitos; la clave del docente no se revisa porque la pone la API.
 function camposAValidar() {
   const estudiante = esEstudiante();
   const esAlta = !empleadoIdInput.value;
@@ -68,8 +79,6 @@ function camposAValidar() {
 
   if (estudiante) {
     campos.push({ el: claveEmpleadoInput, nombre: "carnet", tipo: "carnet" });
-  } else if (rolEmpleadoInput.value.startsWith("DOCENTE")) {
-    campos.push({ el: claveEmpleadoInput, nombre: "identificador", tipo: "texto", max: 20 });
   }
 
   // Al editar se deja en blanco para no cambiarla.
@@ -160,13 +169,59 @@ function actualizarCamposPorRol() {
   tipoEncargadoInput.required = pedirEncargado;
   actualizarCampoOtroParentesco();
 
-  etiquetaClaveEmpleado.textContent = estudiante ? "Carnet" : "Identificador";
-  claveEmpleadoInput.placeholder = estudiante
-    ? "Carnet de 8 dígitos (ej. 20240087)"
-    : "Identificador (solo docentes, ej. DOC021)";
+  actualizarCampoClave();
 
   if (estudiante && !correoEditadoAMano && claveEmpleadoInput.value.trim()) {
     correoEmpleadoInput.value = correoDesdeCarnet(claveEmpleadoInput.value);
+  }
+}
+
+// Administradores y recepcionistas no tienen identificador. El del docente
+// no se escribe: se muestra el que tiene, o el que le tocara si es nuevo.
+function actualizarCampoClave() {
+  const estudiante = esEstudiante();
+  const docente = esDocente();
+  const editandoDocente = empleadoIdInput.value.startsWith("docentes:");
+
+  campoClaveEmpleado.classList.toggle("d-none", !estudiante && !docente);
+  claveEmpleadoInput.readOnly = docente;
+  etiquetaClaveEmpleado.textContent = estudiante ? "Carnet" : "Identificador";
+
+  if (estudiante) {
+    claveEmpleadoInput.placeholder = "Carnet de 8 dígitos (ej. 20240087)";
+    ayudaClaveEmpleado.textContent = "El correo se llena solo con el carnet.";
+
+    // Si venia de docente, la clave DOC no sirve como carnet.
+    if (/^DOC/i.test(claveEmpleadoInput.value)) {
+      claveEmpleadoInput.value = "";
+    }
+    return;
+  }
+
+  if (!docente) return;
+
+  claveEmpleadoInput.placeholder = "Se asigna al guardar";
+  ayudaClaveEmpleado.textContent = "Se genera solo y en orden (DOC001, DOC002...).";
+
+  if (editandoDocente) {
+    claveEmpleadoInput.value = claveDelRegistro;
+  } else {
+    mostrarSiguienteClave();
+  }
+}
+
+async function mostrarSiguienteClave() {
+  claveEmpleadoInput.value = "";
+
+  try {
+    const clave = await obtenerSiguienteClaveDocente();
+
+    // Pudieron cambiar el rol mientras llegaba la respuesta.
+    if (esDocente() && !empleadoIdInput.value.startsWith("docentes:")) {
+      claveEmpleadoInput.value = clave || "";
+    }
+  } catch (error) {
+    // Si no llega, el campo queda con "Se asigna al guardar" y la API la pone igual.
   }
 }
 
@@ -203,13 +258,49 @@ function llenarGrados() {
   });
 }
 
-function llenarAcademicas() {
-  academicaEmpleadoInput.innerHTML = "";
-  academicaEmpleadoInput.add(crearOpcionVacia(academicas.length ? "Seleccionar sección" : "No hay secciones registradas"));
+// Tercer ciclo solo usa secciones de una letra (A a F) y bachillerato las de
+// letra y numero (A1 a A5, B1 a B4).
+function seccionesDelGrado(grado) {
+  const nivel = String(grado.nombreNivel || "").toUpperCase();
+  const nombre = academica => String(academica.academica || "").trim();
 
-  [...academicas]
+  if (nivel.includes("TERCER CICLO")) {
+    return academicas.filter(academica => /^[A-Z]$/i.test(nombre(academica)));
+  }
+
+  if (nivel.includes("BACHILLERATO")) {
+    return academicas.filter(academica => /^[A-Z]\d$/i.test(nombre(academica)));
+  }
+
+  return academicas;
+}
+
+// La lista de secciones depende del grado, por eso se vuelve a llenar cada
+// vez que cambia. Si la seccion que estaba elegida sigue valida, se mantiene.
+function llenarAcademicas() {
+  const grado = buscarGrado(gradoEmpleadoInput.value);
+  const anterior = academicaEmpleadoInput.value;
+
+  academicaEmpleadoInput.innerHTML = "";
+
+  if (!grado) {
+    academicaEmpleadoInput.add(crearOpcionVacia(academicas.length ? "Primero seleccione el grado" : "No hay secciones registradas"));
+    academicaEmpleadoInput.disabled = true;
+    return;
+  }
+
+  const lista = seccionesDelGrado(grado);
+
+  academicaEmpleadoInput.disabled = false;
+  academicaEmpleadoInput.add(crearOpcionVacia(lista.length ? "Seleccionar sección" : "No hay secciones para este grado"));
+
+  [...lista]
     .sort((a, b) => String(a.academica).localeCompare(String(b.academica), "es", { numeric: true }))
     .forEach(academica => academicaEmpleadoInput.add(new Option(academica.academica, academica.idAcademica)));
+
+  if (lista.some(academica => String(academica.idAcademica) === anterior)) {
+    academicaEmpleadoInput.value = anterior;
+  }
 }
 
 async function cargarCatalogos() {
@@ -261,6 +352,20 @@ function crearCelda(texto) {
   return celda;
 }
 
+// El correo puede partirse antes de la @ para que la tabla no se haga tan ancha.
+function crearCeldaCorreo(correo) {
+  const celda = document.createElement("td");
+  const arroba = correo.indexOf("@");
+
+  if (arroba > 0) {
+    celda.append(correo.slice(0, arroba), document.createElement("wbr"), correo.slice(arroba));
+  } else {
+    celda.textContent = correo;
+  }
+
+  return celda;
+}
+
 function crearBotonAccion(texto, icono, clase, accion, id) {
   const boton = document.createElement("button");
   const iconoBoton = document.createElement("i");
@@ -282,7 +387,7 @@ async function mostrarEmpleados() {
 
   tablaEmpleadosBody.innerHTML = `
     <tr>
-      <td colspan="6" class="text-center text-secondary py-4">Cargando personal...</td>
+      <td colspan="5" class="text-center text-secondary py-4">Cargando personal...</td>
     </tr>
   `;
 
@@ -291,7 +396,7 @@ async function mostrarEmpleados() {
   } catch (error) {
     tablaEmpleadosBody.innerHTML = `
       <tr>
-        <td colspan="6" class="text-center text-danger py-4">${error.message}</td>
+        <td colspan="5" class="text-center text-danger py-4">${error.message}</td>
       </tr>
     `;
     mostrarMensaje(error.message, "danger");
@@ -323,7 +428,7 @@ function dibujarFilas(lista) {
     const filaVacia = document.createElement("tr");
     const celdaVacia = document.createElement("td");
 
-    celdaVacia.colSpan = 6;
+    celdaVacia.colSpan = 5;
     celdaVacia.className = "text-center text-secondary py-4";
 
     celdaVacia.textContent = inputBuscarEmpleado?.value.trim()
@@ -348,10 +453,9 @@ function dibujarFilas(lista) {
 
     celdaAcciones.appendChild(contenedorAcciones);
     fila.append(
-      crearCelda(empleado.nombre),
-      crearCelda(empleado.apellido),
+      crearCelda(`${empleado.nombre} ${empleado.apellido}`),
       crearCelda(empleado.clave),
-      crearCelda(empleado.correo),
+      crearCeldaCorreo(empleado.correo),
       crearCelda(empleado.rol),
       celdaAcciones
     );
@@ -367,6 +471,8 @@ function limpiarFormulario() {
   formEmpleado.classList.remove("was-validated");
   empleadoIdInput.value = "";
   correoEditadoAMano = false;
+  claveDelRegistro = "";
+  llenarAcademicas();
   actualizarCamposPorRol();
   tituloFormularioEmpleado.textContent = "Agregar o editar personal";
   btnGuardarEmpleado.textContent = "Guardar";
@@ -386,12 +492,14 @@ async function editarEmpleado(id) {
     nombreEmpleadoInput.value = empleado.nombre;
     apellidoEmpleadoInput.value = empleado.apellido;
     claveEmpleadoInput.value = empleado.clave;
+    claveDelRegistro = empleado.clave;
     contrasenaEmpleadoInput.value = "";
     correoEmpleadoInput.value = empleado.correo;
     rolEmpleadoInput.value = empleado.rol;
 
     await catalogosListos;
     gradoEmpleadoInput.value = String(empleado.idGrado ?? "");
+    llenarAcademicas();
     academicaEmpleadoInput.value = String(empleado.idAcademica ?? "");
 
     // Si el correo guardado no sigue el formato del carnet, se respeta
@@ -515,6 +623,8 @@ bloquearNumeros(
 );
 
 rolEmpleadoInput?.addEventListener("change", actualizarCamposPorRol);
+
+gradoEmpleadoInput?.addEventListener("change", llenarAcademicas);
 
 claveEmpleadoInput?.addEventListener("input", function () {
   if (esEstudiante() && !correoEditadoAMano) {
