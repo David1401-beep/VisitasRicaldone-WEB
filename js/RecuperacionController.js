@@ -1,5 +1,6 @@
 import { solicitarCodigo, verificarCodigo, cambiarPassword } from "./RecuperacionService.js";
 import { revisar, avisoValidacion, bloquearLetras } from "./validaciones.js";
+import { avisoError } from "./avisos.js";
 
 // Los tres pasos viven en la misma pagina. Voy mostrando uno a la vez
 // para no perder el correo ni el codigo entre pantallas.
@@ -57,12 +58,16 @@ document.addEventListener("DOMContentLoaded", function () {
     await conBoton(btnEnviar, "Enviando...", async function () {
       const resultado = await solicitarCodigo(correo);
 
+      // Si el correo no existe se queda en este paso y lo avisa, en vez de
+      // pasar a pedir un codigo que nunca va a llegar.
       if (!resultado.exito) {
-        mostrarError(resultado.mensaje);
+        avisoError(
+          resultado.mensaje,
+          resultado.estado === 404 ? "Correo no registrado" : "No se pudo enviar el código"
+        );
         return;
       }
 
-      // La API siempre responde lo mismo, exista o no el correo.
       mostrarAviso(resultado.mensaje);
       mostrarPaso(formCodigo);
       inputCodigo.focus();
