@@ -27,6 +27,8 @@ const btnCancelarEdicion = document.getElementById("btnCancelarEdicion");
 const btnRecargarEmpleados = document.getElementById("btnRecargarEmpleados");
 const mensajeEmpleado = document.getElementById("mensajeEmpleado");
 const inputBuscarEmpleado = document.getElementById("inputBuscarEmpleado");
+const contenedorVerMas = document.getElementById("contenedorVerMas");
+const btnVerMasEmpleados = document.getElementById("btnVerMasEmpleados");
 const etiquetaClaveEmpleado = document.getElementById("etiquetaClaveEmpleado");
 const campoClaveEmpleado = document.getElementById("campoClaveEmpleado");
 const ayudaClaveEmpleado = document.getElementById("ayudaClaveEmpleado");
@@ -439,8 +441,29 @@ function aplicarFiltro(texto) {
   );
 }
 
+// Sin desplegar solo se ven los primeros, para que la pagina no sea eterna.
+const FILAS_VISIBLES = 8;
+let listaDesplegada = false;
+
+function actualizarBotonVerMas(total) {
+  const sobran = total > FILAS_VISIBLES;
+
+  contenedorVerMas.classList.toggle("d-none", !sobran);
+  if (!sobran) return;
+
+  btnVerMasEmpleados.innerHTML = listaDesplegada
+    ? `<i class="bi bi-chevron-up" aria-hidden="true"></i> Ver menos`
+    : `<i class="bi bi-chevron-down" aria-hidden="true"></i> Ver todos (${total})`;
+  btnVerMasEmpleados.setAttribute("aria-expanded", String(listaDesplegada));
+}
+
 function dibujarFilas(lista) {
   tablaEmpleadosBody.innerHTML = "";
+  actualizarBotonVerMas(lista.length);
+
+  if (!listaDesplegada) {
+    lista = lista.slice(0, FILAS_VISIBLES);
+  }
 
   if (lista.length === 0) {
     const filaVacia = document.createElement("tr");
@@ -627,6 +650,17 @@ tablaEmpleadosBody?.addEventListener("click", async function (e) {
 // Búsqueda
 inputBuscarEmpleado?.addEventListener("input", function () {
   dibujarFilas(aplicarFiltro(this.value));
+});
+
+btnVerMasEmpleados?.addEventListener("click", function () {
+  listaDesplegada = !listaDesplegada;
+  dibujarFilas(aplicarFiltro(inputBuscarEmpleado?.value || ""));
+
+  // Al cerrar la lista se vuelve al inicio de la tabla, si no la pagina se
+  // queda abajo, donde ya no hay nada.
+  if (!listaDesplegada) {
+    tablaEmpleadosBody.closest("section").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 });
 
 btnCancelarEdicion?.addEventListener("click", limpiarFormulario);
