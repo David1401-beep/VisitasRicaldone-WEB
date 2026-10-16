@@ -929,19 +929,17 @@ body {
   outline-offset: 2px;
 }
 
-/* Recuperar la contraseña: discreto, para que no compita con el boton. */
+/* Recuperar la contraseña: azul y subrayado, como un enlace normal. */
 .login-olvido {
   display: inline-block;
   margin-top: 1rem;
-  color: #6b7280;
-  font-size: 0.92rem;
-  text-decoration: none;
+  color: #0d6efd;
+  text-decoration: underline;
 }
 
 .login-olvido:hover,
 .login-olvido:focus-visible {
-  color: #1F2937;
-  text-decoration: underline;
+  color: #0a58ca;
 }
 
 @media (prefers-reduced-motion: reduce) {
