@@ -163,7 +163,7 @@ function actualizarCamposPorRol() {
   etiquetaClaveEmpleado.textContent = estudiante ? "Carnet" : "Identificador";
   claveEmpleadoInput.placeholder = estudiante
     ? "Carnet de 8 dígitos (ej. 20240087)"
-    : "Clave (solo docentes, ej. DOC021)";
+    : "Identificador (solo docentes, ej. DOC021)";
 
   if (estudiante && !correoEditadoAMano && claveEmpleadoInput.value.trim()) {
     correoEmpleadoInput.value = correoDesdeCarnet(claveEmpleadoInput.value);
