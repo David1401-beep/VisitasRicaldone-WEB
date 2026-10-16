@@ -19,6 +19,12 @@
                     <div class="card-body p-5 text-center">
                         <h3 class="fw-bold mb-4">ADMINISTRACIÓN DEL<br>CONTROL DE VISITAS - ITR</h3>
 
+                        <!-- Cambia entre los dos portales. La marcada es en la que se esta. -->
+                        <nav class="login-pestanas mb-4" aria-label="Tipo de usuario">
+                            <a href="inicioSesion-docente.html" class="login-pestana">Docente</a>
+                            <a href="inicioSesion-admin.html" class="login-pestana activa" aria-current="page">Administración</a>
+                        </nav>
+
                         <div class="mb-4">
                             <img src="../img/logoRicaldone.png" alt="Logo Ricaldone" class="img-fluid rounded"
                                 style="max-height: 180px;">
@@ -53,12 +59,8 @@
                                 Iniciar Sesión
                             </button>
 
-                            <a href="recuperarPassword.html" class="d-block mt-3">
+                            <a href="recuperarPassword.html" class="login-olvido">
                                 Olvidé mi contraseña
-                            </a>
-
-                            <a href="inicioSesion-docente.html" class="d-inline-block mt-3">
-                                Ingresar como docente
                             </a>
                         </form>
                     </div>

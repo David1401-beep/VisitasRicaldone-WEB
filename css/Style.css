@@ -890,3 +890,60 @@ body {
   opacity: 1;
   background-color: rgba(127, 127, 127, 0.2);
 }
+
+/* Pestañas para cambiar entre el login de docentes y el de administracion.
+   La marcada usa el mismo azul oscuro que los campos y el boton. */
+.login-pestanas {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background-color: #eef0f3;
+  border-radius: 12px;
+}
+
+.login-pestana {
+  flex: 1 1 0;
+  padding: 0.6rem 0.5rem;
+  border-radius: 9px;
+  color: #4b5563;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.login-pestana:hover {
+  color: #1F2937;
+  background-color: rgba(31, 41, 55, 0.07);
+}
+
+.login-pestana.activa {
+  color: #ffffff;
+  background-color: #1F2937;
+  cursor: default;
+}
+
+.login-pestana:focus-visible {
+  outline: 2px solid #1F2937;
+  outline-offset: 2px;
+}
+
+/* Recuperar la contraseña: discreto, para que no compita con el boton. */
+.login-olvido {
+  display: inline-block;
+  margin-top: 1rem;
+  color: #6b7280;
+  font-size: 0.92rem;
+  text-decoration: none;
+}
+
+.login-olvido:hover,
+.login-olvido:focus-visible {
+  color: #1F2937;
+  text-decoration: underline;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-pestana { transition: none; }
+}
