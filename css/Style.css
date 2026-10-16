@@ -945,3 +945,25 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .login-pestana { transition: none; }
 }
+
+/* Tablas de docentes y recepcion. Antes el ancho venia escrito en el HTML
+   (1000 px) y no podia crecer; ahora crece en monitores grandes. */
+.contenedor-tabla {
+  max-width: 1000px;
+}
+
+@media (min-width: 1400px) {
+  .contenedor-tabla {
+    max-width: 1240px;
+  }
+}
+
+@media (min-width: 1700px) {
+  main.container:has(.contenedor-tabla) {
+    max-width: 1560px;
+  }
+
+  .contenedor-tabla {
+    max-width: 1480px;
+  }
+}

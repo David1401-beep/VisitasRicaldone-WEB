@@ -52,7 +52,7 @@
             <p>Administradores, docentes, recepcionistas y estudiantes del sistema</p>
         </header>
 
-        <div class="admin-superficie">
+        <div class="admin-superficie dos-columnas">
             <section class="admin-panel mb-4" aria-labelledby="tituloFormularioEmpleado">
                 <h2 id="tituloFormularioEmpleado" class="admin-panel-titulo">Agregar o editar personal</h2>
 
@@ -77,18 +77,21 @@
                             <div class="invalid-feedback">Seleccione un rol.</div>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="nombreEmpleado" class="form-label">Nombre</label>
-                            <input type="text" class="form-control" id="nombreEmpleado"
-                                placeholder="Nombre" maxlength="50" required>
-                            <div class="invalid-feedback">Ingrese el nombre.</div>
-                        </div>
+                        <!-- En pantallas grandes nombre y apellido van uno al lado del otro -->
+                        <div class="fila-doble">
+                            <div class="mb-3">
+                                <label for="nombreEmpleado" class="form-label">Nombre</label>
+                                <input type="text" class="form-control" id="nombreEmpleado"
+                                    placeholder="Nombre" maxlength="50" required>
+                                <div class="invalid-feedback">Ingrese el nombre.</div>
+                            </div>
 
-                        <div class="mb-3">
-                            <label for="apellidoEmpleado" class="form-label">Apellido</label>
-                            <input type="text" class="form-control" id="apellidoEmpleado"
-                                placeholder="Apellido" maxlength="50" required>
-                            <div class="invalid-feedback">Ingrese el apellido.</div>
+                            <div class="mb-3">
+                                <label for="apellidoEmpleado" class="form-label">Apellido</label>
+                                <input type="text" class="form-control" id="apellidoEmpleado"
+                                    placeholder="Apellido" maxlength="50" required>
+                                <div class="invalid-feedback">Ingrese el apellido.</div>
+                            </div>
                         </div>
 
                         <div class="mb-3">
@@ -136,18 +139,20 @@
                                 <hr class="text-secondary">
                                 <h3 class="h6 fw-bold mb-3">Encargado del estudiante</h3>
 
-                                <div class="mb-3">
-                                    <label for="nombreEncargado" class="form-label">Nombre del encargado</label>
-                                    <input type="text" class="form-control" id="nombreEncargado"
-                                        maxlength="50" autocomplete="off">
-                                    <div class="invalid-feedback">Ingrese el nombre del encargado.</div>
-                                </div>
+                                <div class="fila-doble">
+                                    <div class="mb-3">
+                                        <label for="nombreEncargado" class="form-label">Nombre del encargado</label>
+                                        <input type="text" class="form-control" id="nombreEncargado"
+                                            maxlength="50" autocomplete="off">
+                                        <div class="invalid-feedback">Ingrese el nombre del encargado.</div>
+                                    </div>
 
-                                <div class="mb-3">
-                                    <label for="apellidoEncargado" class="form-label">Apellido del encargado</label>
-                                    <input type="text" class="form-control" id="apellidoEncargado"
-                                        maxlength="50" autocomplete="off">
-                                    <div class="invalid-feedback">Ingrese el apellido del encargado.</div>
+                                    <div class="mb-3">
+                                        <label for="apellidoEncargado" class="form-label">Apellido del encargado</label>
+                                        <input type="text" class="form-control" id="apellidoEncargado"
+                                            maxlength="50" autocomplete="off">
+                                        <div class="invalid-feedback">Ingrese el apellido del encargado.</div>
+                                    </div>
                                 </div>
 
                                 <div class="mb-3">

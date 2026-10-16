@@ -294,3 +294,36 @@
   opacity: 1;
   background-color: rgba(127, 127, 127, 0.2);
 }
+
+/* ---------------------------------------------------------------
+   Monitores grandes (desde 1400 px). En laptop y celular no cambia
+   nada: todo sigue en una sola columna.
+   --------------------------------------------------------------- */
+@media (min-width: 1400px) {
+  .admin-contenido {
+    width: min(1640px, calc(100% - 64px));
+  }
+
+  /* Formulario a la izquierda y lista a la derecha, para ver lo que se
+     guarda sin tener que bajar. En Catalogos solo la pestana abierta: las
+     demas tienen que seguir ocultas. */
+  .admin-superficie.dos-columnas,
+  .tab-content > .tab-pane.active.dos-columnas {
+    display: grid;
+    grid-template-columns: minmax(380px, 460px) minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+  }
+
+  /* Lado a lado ya no hace falta el margen que los separaba hacia abajo. */
+  .dos-columnas > .admin-panel {
+    margin-bottom: 0 !important;
+  }
+
+  /* Nombre y apellido, uno al lado del otro. */
+  .fila-doble {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 12px;
+  }
+}
