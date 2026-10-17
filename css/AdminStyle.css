@@ -175,6 +175,26 @@
   background-color: #f4f4f4;
 }
 
+/* Etiqueta del tipo de docente en "Materias por docente" */
+.tipo-docente {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tipo-tecnico {
+  background-color: #e7f0ff;
+  color: #0b5ed7;
+}
+
+.tipo-academico {
+  background-color: #e6f4ec;
+  color: #157347;
+}
+
 .btn-ver-mas {
   min-width: 170px;
   padding: 7px 18px;

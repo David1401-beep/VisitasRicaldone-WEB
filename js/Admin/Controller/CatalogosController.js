@@ -553,6 +553,9 @@ function crearCelda(texto) {
       );
 
       llenarMaterias();
+
+      // Si la tabla llego antes que los docentes, se vuelve a dibujar con el tipo.
+      if (lista.length) dibujar();
     } catch (error) {
       mostrarMensaje(mensaje, error.message, "danger");
     }
@@ -561,23 +564,40 @@ function crearCelda(texto) {
   docenteInput.addEventListener("change", llenarMaterias);
 
   async function cargar() {
-    tabla.innerHTML = `<tr><td colspan="3" class="text-center text-secondary py-4">Cargando...</td></tr>`;
+    tabla.innerHTML = `<tr><td colspan="4" class="text-center text-secondary py-4">Cargando...</td></tr>`;
 
     try {
       lista = await obtenerAsignaciones();
     } catch (error) {
-      tabla.innerHTML = `<tr><td colspan="3" class="text-center text-danger py-4">${error.message}</td></tr>`;
+      tabla.innerHTML = `<tr><td colspan="4" class="text-center text-danger py-4">${error.message}</td></tr>`;
       return;
     }
 
     dibujar();
   }
 
+  // El tipo sale de la lista de docentes que ya se cargo para el formulario.
+  function crearCeldaTipo(idDocente) {
+    const celda = document.createElement("td");
+    const tipo = tipoDeMateriaPara(idDocente);
+
+    if (!tipo) {
+      celda.textContent = docentes.length ? "Sin tipo" : "...";
+      return celda;
+    }
+
+    const etiqueta = document.createElement("span");
+    etiqueta.className = `tipo-docente ${tipo === "TECNICA" ? "tipo-tecnico" : "tipo-academico"}`;
+    etiqueta.textContent = tipo === "TECNICA" ? "Técnico" : "Académico";
+    celda.appendChild(etiqueta);
+    return celda;
+  }
+
   function dibujar() {
     tabla.innerHTML = "";
 
     if (lista.length === 0) {
-      tabla.innerHTML = `<tr><td colspan="3" class="text-center text-secondary py-4">No hay materias asignadas.</td></tr>`;
+      tabla.innerHTML = `<tr><td colspan="4" class="text-center text-secondary py-4">No hay materias asignadas.</td></tr>`;
       return;
     }
 
@@ -594,6 +614,7 @@ function crearCelda(texto) {
 
       fila.append(
         crearCelda(item.nombreDocente || "Docente"),
+        crearCeldaTipo(item.idDocente),
         crearCelda(item.nombreMateria || "Materia"),
         celdaAcciones
       );
