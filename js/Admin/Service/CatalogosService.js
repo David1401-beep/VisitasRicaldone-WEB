@@ -118,7 +118,8 @@ export async function obtenerDocentesParaAsignar() {
 
   return (Array.isArray(lista) ? lista : []).map(docente => ({
     idDocente: docente.idDocente,
-    nombre: `${docente.docNombre || ""} ${docente.docApellido || ""}`.trim()
+    nombre: `${docente.docNombre || ""} ${docente.docApellido || ""}`.trim(),
+    tipo: docente.docTipo || ""
   }));
 }
 

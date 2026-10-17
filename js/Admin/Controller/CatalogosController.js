@@ -492,11 +492,13 @@ function crearCelda(texto) {
   if (!form || !tabla) return;
 
   let lista = [];
+  let docentes = [];
+  let materias = [];
 
-  function llenarSelect(select, opciones, textoVacio) {
+  function llenarSelect(select, opciones, textoVacio, textoSinRegistros = "No hay registros") {
     select.innerHTML = "";
 
-    const vacia = new Option(opciones.length ? textoVacio : "No hay registros", "");
+    const vacia = new Option(opciones.length ? textoVacio : textoSinRegistros, "");
     vacia.disabled = true;
     vacia.selected = true;
     select.add(vacia);
@@ -504,9 +506,42 @@ function crearCelda(texto) {
     opciones.forEach(opcion => select.add(new Option(opcion.texto, opcion.valor)));
   }
 
+  // El docente tecnico solo da materias tecnicas y el academico solo
+  // academicas, asi que la lista de materias depende del docente elegido.
+  function tipoDeMateriaPara(idDocente) {
+    const docente = docentes.find(d => String(d.idDocente) === String(idDocente));
+    const tipo = (docente?.tipo || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toUpperCase();
+
+    if (tipo.includes("TECNICO")) return "TECNICA";
+    if (tipo.includes("ACADEMICO")) return "ACADEMICA";
+    return null;
+  }
+
+  function llenarMaterias() {
+    const tipo = tipoDeMateriaPara(docenteInput.value);
+
+    if (!tipo) {
+      llenarSelect(materiaInput, [], "", "Primero seleccione el docente");
+      materiaInput.disabled = true;
+      return;
+    }
+
+    const delTipo = materias
+      .filter(m => m.matTipo === tipo)
+      .map(m => ({ texto: m.matNombre, valor: m.idMateria }));
+
+    materiaInput.disabled = false;
+    llenarSelect(
+      materiaInput,
+      delTipo,
+      tipo === "TECNICA" ? "Seleccionar materia técnica" : "Seleccionar materia académica",
+      tipo === "TECNICA" ? "No hay materias técnicas registradas" : "No hay materias académicas registradas"
+    );
+  }
+
   async function cargarListas() {
     try {
-      const [docentes, materias] = await Promise.all([
+      [docentes, materias] = await Promise.all([
         obtenerDocentesParaAsignar(),
         obtenerMaterias()
       ]);
@@ -517,15 +552,13 @@ function crearCelda(texto) {
         "Seleccionar docente"
       );
 
-      llenarSelect(
-        materiaInput,
-        materias.map(m => ({ texto: m.matNombre, valor: m.idMateria })),
-        "Seleccionar materia"
-      );
+      llenarMaterias();
     } catch (error) {
       mostrarMensaje(mensaje, error.message, "danger");
     }
   }
+
+  docenteInput.addEventListener("change", llenarMaterias);
 
   async function cargar() {
     tabla.innerHTML = `<tr><td colspan="3" class="text-center text-secondary py-4">Cargando...</td></tr>`;
@@ -597,6 +630,7 @@ function crearCelda(texto) {
     if (resultado.exito) {
       form.reset();
       form.classList.remove("was-validated");
+      llenarMaterias();
       await cargar();
     }
   });
