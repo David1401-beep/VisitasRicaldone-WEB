@@ -441,15 +441,20 @@ function aplicarFiltro(texto) {
   );
 }
 
-// Sin desplegar solo se ven los primeros, para que la pagina no sea eterna.
-const FILAS_VISIBLES = 8;
+// Sin desplegar se ven al menos 8, para que la pagina no sea eterna. En
+// pantallas grandes el formulario va al lado, y cuando es mas largo (con los
+// datos del estudiante) se muestran las filas que quepan hasta su mismo largo.
+const FILAS_MINIMAS = 8;
 let listaDesplegada = false;
 
-function actualizarBotonVerMas(total) {
-  const sobran = total > FILAS_VISIBLES;
+const panelFormulario = formEmpleado?.closest(".admin-panel");
+const panelLista = tablaEmpleadosBody?.closest(".admin-panel");
 
-  contenedorVerMas.classList.toggle("d-none", !sobran);
-  if (!sobran) return;
+function actualizarBotonVerMas(total, visibles) {
+  const mostrar = listaDesplegada ? total > FILAS_MINIMAS : visibles < total;
+
+  contenedorVerMas.classList.toggle("d-none", !mostrar);
+  if (!mostrar) return;
 
   btnVerMasEmpleados.innerHTML = listaDesplegada
     ? `<i class="bi bi-chevron-up" aria-hidden="true"></i> Ver menos`
@@ -457,15 +462,43 @@ function actualizarBotonVerMas(total) {
   btnVerMasEmpleados.setAttribute("aria-expanded", String(listaDesplegada));
 }
 
-function dibujarFilas(lista) {
-  tablaEmpleadosBody.innerHTML = "";
-  actualizarBotonVerMas(lista.length);
+function formularioAlLado() {
+  if (!panelFormulario || !panelLista) return false;
 
-  if (!listaDesplegada) {
-    lista = lista.slice(0, FILAS_VISIBLES);
+  const formulario = panelFormulario.getBoundingClientRect();
+  const lista = panelLista.getBoundingClientRect();
+
+  return formulario.height > 0 && Math.abs(formulario.top - lista.top) < 4;
+}
+
+// Se llama con todas las filas ya dibujadas: mide cuanto se pasa la lista del
+// largo del formulario y cuenta cuantas filas hay que quitar desde abajo. Se
+// mide en vez de calcular porque el alto de cada fila cambia con la pantalla.
+function filasQueCaben(total) {
+  const minimo = Math.min(total, FILAS_MINIMAS);
+
+  if (!formularioAlLado()) return minimo;
+
+  // El boton cuenta en el largo, porque va a estar si no caben todas.
+  contenedorVerMas.classList.remove("d-none");
+
+  const filas = [...tablaEmpleadosBody.rows];
+  let sobrante = panelLista.offsetHeight - panelFormulario.offsetHeight;
+  let visibles = filas.length;
+
+  while (visibles > minimo && sobrante > 0) {
+    visibles--;
+    sobrante -= filas[visibles].offsetHeight;
   }
 
+  return visibles;
+}
+
+function dibujarFilas(lista) {
+  tablaEmpleadosBody.innerHTML = "";
+
   if (lista.length === 0) {
+    actualizarBotonVerMas(0, 0);
     const filaVacia = document.createElement("tr");
     const celdaVacia = document.createElement("td");
 
@@ -481,29 +514,61 @@ function dibujarFilas(lista) {
     return;
   }
 
-  lista.forEach(empleado => {
-    const fila = document.createElement("tr");
-    const celdaAcciones = document.createElement("td");
-    const contenedorAcciones = document.createElement("div");
+  lista.forEach(empleado => tablaEmpleadosBody.appendChild(crearFila(empleado)));
 
-    contenedorAcciones.className = "admin-acciones";
-    contenedorAcciones.append(
-      crearBotonAccion("Editar", "bi-pencil-fill", "btn-warning", "editar", empleado.id),
-      crearBotonAccion("Eliminar", "bi-trash-fill", "btn-danger", "eliminar", empleado.id)
-    );
+  if (listaDesplegada) {
+    actualizarBotonVerMas(lista.length, lista.length);
+    return;
+  }
 
-    celdaAcciones.appendChild(contenedorAcciones);
-    fila.append(
-      crearCelda(`${empleado.nombre} ${empleado.apellido}`),
-      crearCelda(empleado.clave),
-      crearCeldaCorreo(empleado.correo),
-      crearCelda(empleado.rol),
-      celdaAcciones
-    );
+  const visibles = filasQueCaben(lista.length);
 
-    tablaEmpleadosBody.appendChild(fila);
+  [...tablaEmpleadosBody.rows].slice(visibles).forEach(fila => fila.remove());
+  actualizarBotonVerMas(lista.length, visibles);
+}
+
+function crearFila(empleado) {
+  const fila = document.createElement("tr");
+  const celdaAcciones = document.createElement("td");
+  const contenedorAcciones = document.createElement("div");
+
+  contenedorAcciones.className = "admin-acciones";
+  contenedorAcciones.append(
+    crearBotonAccion("Editar", "bi-pencil-fill", "btn-warning", "editar", empleado.id),
+    crearBotonAccion("Eliminar", "bi-trash-fill", "btn-danger", "eliminar", empleado.id)
+  );
+
+  celdaAcciones.appendChild(contenedorAcciones);
+  fila.append(
+    crearCelda(`${empleado.nombre} ${empleado.apellido}`),
+    crearCelda(empleado.clave),
+    crearCeldaCorreo(empleado.correo),
+    crearCelda(empleado.rol),
+    celdaAcciones
+  );
+
+  return fila;
+}
+
+// Cuando el formulario cambia de largo (otro rol, el campo "¿Cuál?" del
+// parentesco, la pantalla) se vuelve a calcular cuantas filas caben.
+let ajustePendiente = false;
+
+function reajustarLista() {
+  if (listaDesplegada || ajustePendiente || personalCompleto.length === 0) return;
+
+  ajustePendiente = true;
+  requestAnimationFrame(() => {
+    ajustePendiente = false;
+    dibujarFilas(aplicarFiltro(inputBuscarEmpleado?.value || ""));
   });
 }
+
+if (panelFormulario && window.ResizeObserver) {
+  new ResizeObserver(reajustarLista).observe(panelFormulario);
+}
+
+window.addEventListener("resize", reajustarLista);
 
 function limpiarFormulario() {
   if (!formEmpleado) return;
