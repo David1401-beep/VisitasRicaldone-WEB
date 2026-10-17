@@ -345,6 +345,15 @@ function crearCelda(texto) {
 
   let lista = [];
 
+  // Se escribe siempre en mayuscula y solo con letras y numeros.
+  nombreInput.addEventListener("input", function () {
+    const limpio = this.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+
+    if (limpio !== this.value) {
+      this.value = limpio;
+    }
+  });
+
   async function cargar() {
     tabla.innerHTML = `<tr><td colspan="2" class="text-center text-secondary py-4">Cargando...</td></tr>`;
 
@@ -400,17 +409,20 @@ function crearCelda(texto) {
       return;
     }
 
-    btnGuardar.disabled = true;
-    // Las secciones son del tipo A1 o B2: letra y numero juntos.
+    // Una letra para tercer ciclo (A, G...) o letra y numero para
+    // bachillerato (A1, B5...). Es el mismo formato que revisa la API.
     const problema = revisar([
-      { el: nombreInput, nombre: "nombre de la sección", tipo: "texto", max: 60 }
-    ]);
+      { el: nombreInput, nombre: "nombre de la sección", tipo: "texto", max: 2 }
+    ]) || (!/^[A-Z][0-9]?$/.test(nombreInput.value.trim())
+      ? { el: nombreInput, mensaje: "La sección debe ser una letra o una letra con un número (ej. G o B5)." }
+      : null);
 
     if (problema) {
       avisoValidacion(problema);
       return;
     }
 
+    btnGuardar.disabled = true;
     const resultado = await guardarSeccion(idInput.value, nombreInput.value);
     btnGuardar.disabled = false;
 
