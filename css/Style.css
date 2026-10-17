@@ -257,7 +257,32 @@ body > *:not(header) {
   border-radius: 4px;
 }
 
-/* Boton para ver el resto de las citas. Fondo blanco para que resalte sobre el gris. */
+/* Version blanca, como la superficie del administrador. Como el fondo ya no
+   es gris, cada cita lleva borde y sombra para que se distinga. */
+.historial-contenedor.historial-blanco {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+}
+
+.historial-blanco .tabla-citas tbody tr {
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.10));
+}
+
+.historial-blanco .tabla-citas tbody td {
+  border-top: 1px solid #e3e6ea;
+  border-bottom: 1px solid #e3e6ea;
+}
+
+.historial-blanco .tabla-citas tbody td:first-child {
+  border-left: 1px solid #e3e6ea;
+}
+
+.historial-blanco .tabla-citas tbody td:last-child {
+  border-right: 1px solid #e3e6ea;
+}
+
+/* Boton para ver el resto de las citas */
 .btn-ver-mas {
   min-width: 170px;
   padding: 7px 18px;
