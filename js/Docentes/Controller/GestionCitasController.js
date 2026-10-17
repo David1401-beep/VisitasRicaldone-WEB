@@ -667,7 +667,7 @@ function actualizarBotonVerMasCitas(total) {
 
   btnVerMasCitas.innerHTML = citasDesplegadas
     ? `<i class="bi bi-chevron-up" aria-hidden="true"></i> Ver menos`
-    : `<i class="bi bi-chevron-down" aria-hidden="true"></i> Ver todas (${total})`;
+    : `<i class="bi bi-chevron-down" aria-hidden="true"></i> Ver ${total - CITAS_VISIBLES} más`;
   btnVerMasCitas.setAttribute("aria-expanded", String(citasDesplegadas));
 }
 

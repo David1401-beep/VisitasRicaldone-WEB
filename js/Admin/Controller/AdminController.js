@@ -456,9 +456,11 @@ function actualizarBotonVerMas(total, visibles) {
   contenedorVerMas.classList.toggle("d-none", !mostrar);
   if (!mostrar) return;
 
+  // El numero es el de los que quedan escondidos: si el formulario es largo
+  // y se ven mas filas, baja.
   btnVerMasEmpleados.innerHTML = listaDesplegada
     ? `<i class="bi bi-chevron-up" aria-hidden="true"></i> Ver menos`
-    : `<i class="bi bi-chevron-down" aria-hidden="true"></i> Ver todos (${total})`;
+    : `<i class="bi bi-chevron-down" aria-hidden="true"></i> Ver ${total - visibles} más`;
   btnVerMasEmpleados.setAttribute("aria-expanded", String(listaDesplegada));
 }
 
