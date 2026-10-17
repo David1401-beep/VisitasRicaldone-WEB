@@ -648,8 +648,43 @@ function configurarActualizacionAutomatica() {
 
 // Render de la tabla
 
+// Sin desplegar solo se ven las primeras 7, igual que la lista de personal
+// del administrador. Se recuerda la ultima lista para poder abrirla y
+// cerrarla sin volver a pedirla a la API.
+const CITAS_VISIBLES = 7;
+const contenedorVerMasCitas = document.getElementById("contenedorVerMasCitas");
+const btnVerMasCitas = document.getElementById("btnVerMasCitas");
+let citasDesplegadas = false;
+let ultimaListaCitas = [];
+
+function actualizarBotonVerMasCitas(total) {
+  if (!contenedorVerMasCitas || !btnVerMasCitas) return;
+
+  const sobran = total > CITAS_VISIBLES;
+
+  contenedorVerMasCitas.classList.toggle("d-none", !sobran);
+  if (!sobran) return;
+
+  btnVerMasCitas.innerHTML = citasDesplegadas
+    ? `<i class="bi bi-chevron-up" aria-hidden="true"></i> Ver menos`
+    : `<i class="bi bi-chevron-down" aria-hidden="true"></i> Ver todas (${total})`;
+  btnVerMasCitas.setAttribute("aria-expanded", String(citasDesplegadas));
+}
+
+btnVerMasCitas?.addEventListener("click", function () {
+  citasDesplegadas = !citasDesplegadas;
+  mostrarCitas(ultimaListaCitas);
+
+  // Al cerrarla se vuelve al inicio de la tabla para no quedar abajo en blanco.
+  if (!citasDesplegadas) {
+    tablaHistorial.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+});
+
 function mostrarCitas(listaCitas) {
   cuerpoTablaCitas.innerHTML = "";
+  ultimaListaCitas = listaCitas;
+  actualizarBotonVerMasCitas(listaCitas.length);
 
   if (listaCitas.length === 0) {
     mostrarMensajeVacio();
@@ -663,7 +698,9 @@ function mostrarCitas(listaCitas) {
 
   tablaHistorial.style.display = "block";
 
-  listaCitas.forEach(cita => {
+  const visibles = citasDesplegadas ? listaCitas : listaCitas.slice(0, CITAS_VISIBLES);
+
+  visibles.forEach(cita => {
     cuerpoTablaCitas.innerHTML += `
       <tr data-id="${cita.idCita}"
           data-relacion="${cita.idEstudianteEncargado}"
