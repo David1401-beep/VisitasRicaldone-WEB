@@ -10,7 +10,8 @@ import {
   formatearFechaEspanol,
   formatearHoraAMPM,
   aceptarPropuesta,
-  proponerOtraFecha
+  proponerOtraFecha,
+  cambiarEstadoCita
 } from "../Service/GestionCitasService.js";
 import { ajustarCampoHora } from "../../horarioCitas.js";
 import { revisar, revisarValor, avisoValidacion } from "../../validaciones.js";
@@ -266,6 +267,12 @@ async function abrirEdicion(idCita) {
   }
 
   const datos = fila.dataset;
+
+  // Por si la tabla quedo vieja y la cita cambio de estado mientras tanto.
+  if (datos.estadoApi !== "PENDIENTE") {
+    avisoError("Solo se pueden editar las citas pendientes.");
+    return;
+  }
 
   const opcionesEstudiante = relacionesEnMemoria
     .map(relacion => {
@@ -530,6 +537,30 @@ async function confirmarEliminacion(idCita) {
 }
 
 
+async function confirmarFinalizacion(idCita) {
+  const fila = cuerpoTablaCitas.querySelector(`tr[data-id="${idCita}"]`);
+  const estudiante = fila?.dataset.estudiante || "esta cita";
+
+  const confirmado = await confirmarAccion(
+    "¿Marcar como finalizada?",
+    `La reunión con ${estudiante} quedará como finalizada y ya no se podrá cambiar.`,
+    "Sí, finalizar"
+  );
+
+  if (!confirmado) {
+    return;
+  }
+
+  try {
+    await cambiarEstadoCita(idCita, "FINALIZADA");
+    await actualizarHistorial(false);
+    avisoExito("La cita quedó como finalizada.");
+  } catch (error) {
+    avisoError(error.message);
+  }
+}
+
+
 // Filtro por estado
 
 filtros.forEach(filtro => {
@@ -690,16 +721,37 @@ function accionesDeFila(cita) {
     `;
   }
 
-  return `
-    <button type="button" class="btn btn-sm btn-outline-primary me-1 btn-editar-cita"
-            title="Editar cita" aria-label="Editar cita">
-      <i class="bi bi-pencil-square"></i>
-    </button>
+  const botonEliminar = `
     <button type="button" class="btn btn-sm btn-outline-danger btn-eliminar-cita"
             title="Eliminar cita" aria-label="Eliminar cita">
       <i class="bi bi-trash"></i>
     </button>
   `;
+
+  // Solo una cita pendiente se puede editar. Ya aceptada o rechazada, el
+  // encargado respondio a esos datos y no se le cambian por detras.
+  if (cita.estadoApi === "PENDIENTE") {
+    return `
+      <button type="button" class="btn btn-sm btn-outline-primary me-1 btn-editar-cita"
+              title="Editar cita" aria-label="Editar cita">
+        <i class="bi bi-pencil-square"></i>
+      </button>
+      ${botonEliminar}
+    `;
+  }
+
+  // A la aceptada lo unico que le queda es cerrarla cuando ya fue la reunion.
+  if (cita.estadoApi === "ACEPTADA") {
+    return `
+      <button type="button" class="btn btn-sm btn-outline-success me-1 btn-finalizar-cita"
+              title="Marcar como finalizada" aria-label="Marcar como finalizada">
+        <i class="bi bi-check2-circle"></i>
+      </button>
+      ${botonEliminar}
+    `;
+  }
+
+  return botonEliminar;
 }
 
 function mostrarMensajeVacio() {
@@ -734,8 +786,9 @@ if (cuerpoTablaCitas) {
     const botonEditar = evento.target.closest(".btn-editar-cita");
     const botonEliminar = evento.target.closest(".btn-eliminar-cita");
     const botonRevisar = evento.target.closest(".btn-revisar-propuesta");
+    const botonFinalizar = evento.target.closest(".btn-finalizar-cita");
 
-    if (!botonEditar && !botonEliminar && !botonRevisar) {
+    if (!botonEditar && !botonEliminar && !botonRevisar && !botonFinalizar) {
       return;
     }
 
@@ -747,6 +800,8 @@ if (cuerpoTablaCitas) {
 
     if (botonRevisar) {
       abrirRevisionPropuesta(idCita);
+    } else if (botonFinalizar) {
+      confirmarFinalizacion(idCita);
     } else if (botonEditar) {
       abrirEdicion(idCita);
     } else {
